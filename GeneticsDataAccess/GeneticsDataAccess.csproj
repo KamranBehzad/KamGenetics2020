@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Map\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\AAKam\KBLib\KBLib.csproj" />
+    <ProjectReference Include="..\..\AAKam\MainDataAccess\MainDataAccess.csproj" />
+    <ProjectReference Include="..\KamGenetics2020\KamGenetics2020.csproj" />
+  </ItemGroup>
+
+</Project>
