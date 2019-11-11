@@ -29,6 +29,7 @@ namespace KamGenetics2020.Helpers
             var amplitude = maxAmount / 4;
             return GetResourceRegenerationUnitByTimeIndex(timeIdx) * amplitude;
         }
+
         /// <summary>
         /// Returns the amount of resources that will be regenerated for the current time index.
         /// The amount is calculated by mixing two sine functions.

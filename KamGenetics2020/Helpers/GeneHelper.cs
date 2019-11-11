@@ -22,8 +22,8 @@ namespace KamGenetics2020.Helpers
         {
             Worker = 1,     // organism cultivates resources, never steals.
             Survivor = 2,   // will cultivate resources but if none available will steal.
-            Thief = 3,      // steals from others. Will cultivate if nothing found to steal.
-            Murderer = 4,   // steals from others and kills them.
+            Thief = 3,      // steals from others. Will not kill to steal. Will cultivate if nothing found to steal.
+            Murderer = 4,   // steals from others. Kills them if necessary.
         }
 
         /// <summary>
@@ -114,6 +114,8 @@ namespace KamGenetics2020.Helpers
                     return ((CooperationGene)value).ToString();
                 case GeneEnum.Economy:
                     return ((EconomyGene)value).ToString();
+                case GeneEnum.Libido:
+                    return $"Libido{value}";
             }
         }
 

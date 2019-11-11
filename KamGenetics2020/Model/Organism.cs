@@ -67,7 +67,8 @@ namespace KamGenetics2020.Model
         {
             Genes.Add(GeneHelper.CreateCooperationGene(RandomHelper.StandardGeneratorInstance.Next(1,2)));
             Genes.Add(GeneHelper.CreateEconomyGene());
-            Genes.Add(GeneHelper.CreateLibidoGene(2));
+            var geneValue = RandomHelper.StandardGeneratorInstance.Next(0, 10);
+            Genes.Add(GeneHelper.CreateLibidoGene(geneValue));
         }
 
         [Key]
