@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading;
 using KamGenetics2020.Helpers;
+using KamGeneticsLib.Model;
 using KBLib.Helpers;
 
 namespace KamGenetics2020.Model
@@ -123,7 +124,8 @@ namespace KamGenetics2020.Model
             {
                 TimeIdx = TimeIdx,
                 Population = Population,
-                PeriodStartResourceLevel = ResourceLevel
+                PeriodStartResourceLevel = ResourceLevel,
+                MeanLibido = CalculateMeanLibido()
             };
             // Run world events
             foreach (var organism in Organisms)
@@ -138,6 +140,11 @@ namespace KamGenetics2020.Model
             PeriodStats.Add(ThisPeriodStats);
             // Increment Time Index
             TimeIdx += TimeIncrement;
+        }
+
+        private double CalculateMeanLibido()
+        {
+           return Organisms.Average(o => o.GetGeneByType(GeneEnum.Libido).CurrentValue);
         }
 
         private void AddTheBabies()
@@ -278,7 +285,7 @@ namespace KamGenetics2020.Model
             }
         }
 
-        public double RecordPeriodConsumption(double consumption)
+        public double RecordOrganismConsumptionInCurrentPeriod(double consumption)
         {
             ThisPeriodStats.PeriodConsumption += consumption;
             return ThisPeriodStats.PeriodConsumption;

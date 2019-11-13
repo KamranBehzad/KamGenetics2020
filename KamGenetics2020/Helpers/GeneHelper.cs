@@ -1,31 +1,10 @@
 ﻿using KamGenetics2020.Model;
+using KamGeneticsLib.Model;
 
 namespace KamGenetics2020.Helpers
 {
     public static class GeneHelper
     {
-        public enum GeneEnum
-        {
-            UserDefined,
-            Cooperation,
-            Economy,
-            Libido
-        }
-
-        public enum CooperationGene
-        {
-            Solo = 1,           // organism prefers to work solo
-            Cooperative = 2,    // organism prefers to work in teams
-        }
-
-        public enum EconomyGene
-        {
-            Worker = 1,     // organism cultivates resources, never steals.
-            Survivor = 2,   // will cultivate resources but if none available will steal.
-            Thief = 3,      // steals from others. Will not kill to steal. Will cultivate if nothing found to steal.
-            Murderer = 4,   // steals from others. Kills them if necessary.
-        }
-
         /// <summary>
         /// Economy Gene:
         /// 1. Worker - will cultivate resources, never steals.

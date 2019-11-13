@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using KamGenetics2020.Helpers;
+using KamGeneticsLib.Model;
 using KBLib.Helpers;
 
 namespace KamGenetics2020.Model
@@ -41,7 +42,7 @@ namespace KamGenetics2020.Model
         public string ValueDescription { get; set; }
 
         public int LastValue { get; set; }
-        public GeneHelper.GeneEnum GeneType { get; set; }
+        public GeneEnum GeneType { get; set; }
         /// <summary>
         /// Set CanMutate to false to hold constant the value of a gene in the population
         /// </summary>

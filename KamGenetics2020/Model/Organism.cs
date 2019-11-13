@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using KamGenetics2020.Helpers;
+using KamGeneticsLib.Model;
 using KBLib.Helpers;
 
 namespace KamGenetics2020.Model
@@ -130,9 +131,9 @@ namespace KamGenetics2020.Model
         private void ConsumeResources()
         {
             double consumption = Math.Min(AvailableResources, ConsumptionRatePerPeriod);
-            World.RecordPeriodConsumption(consumption);
+            World.RecordOrganismConsumptionInCurrentPeriod(consumption);
             DecreaseResources(consumption);
-            // develop consumption & starvation model
+            // todo develop consumption & starvation model
             if (consumption < ConsumptionRatePerPeriod)
             {
 
@@ -206,8 +207,9 @@ namespace KamGenetics2020.Model
 
         private bool CanProcreate()
         {
-            return Age >= MaturityStart && Age <= MaturityFinish 
-                                        && RandomHelper.StandardGeneratorInstance.Next(100) < Genes.First(g => g.GeneType == GeneHelper.GeneEnum.Libido).CurrentValue;
+           return Age >= MaturityStart
+                  && Age <= MaturityFinish
+                  && RandomHelper.StandardGeneratorInstance.Next(100) < Genes.First(g => g.GeneType == GeneEnum.Libido).CurrentValue;
         }
 
         public World World { get; set; }
@@ -264,6 +266,11 @@ namespace KamGenetics2020.Model
         public double GroupStorageCapacity
         {
             get { return Group == null ? 0 : Group.StorageCapacity; }
+        }
+
+        public Gene GetGeneByType(GeneEnum geneType)
+        {
+          return Genes.Where(g => g.GeneType == geneType).FirstOrDefault();
         }
     }
 }

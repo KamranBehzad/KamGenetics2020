@@ -19,5 +19,7 @@ namespace KamGenetics2020.Model
         public double CalculatedReplenishmentAmount { get; set; }
         public double ActualReplenishmentAmount { get; set; }
         public DateTime Modified { get; set; }
+        public double MeanLibido{ get; set; }
+
     }
 }
