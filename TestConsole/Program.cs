@@ -98,7 +98,6 @@ namespace TestConsole
             Console.WriteLine("Initialising the data context ...");
 
             _db.Worlds.Add(World);
-            //_db.Worlds.Include(w => w.Organisms).ThenInclude(organism => organism.Genes);
             PersistWorldToDb();
         }
 
@@ -112,6 +111,7 @@ namespace TestConsole
         {
             var connectionStringAlias = "KamGeneticsLibSqlAlias";
             var connectionString = ConfigurationManager.ConnectionStrings[connectionStringAlias].ConnectionString;
+            // Create a date time dependent DB name
             connectionString = connectionString.Replace("KamGeneticsLibDbName", GetDynamicDbName());
             return connectionString;
         }
@@ -126,7 +126,7 @@ namespace TestConsole
 //#if DEBUG
 //            Console.WriteLine("Performing periodic persist ...");
 //#endif
-            if (World.TimeIdx % 1000 == 0
+            if (World.TimeIdx % 100 == 0
                 || World.TimeIdx >= Simulator.FinishTimeIndex)
             {
                 _db.SaveChanges();

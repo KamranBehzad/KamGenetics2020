@@ -15,11 +15,6 @@ namespace GeneticsDataAccess.Map
                 .WithMany()
                 .HasForeignKey(r => r.ParentId);
 
-            modelBuilder.Entity<Organism>()
-                .HasOne(r => r.World)
-                .WithMany()
-                .HasForeignKey(r => r.WorldId);
-
             //modelBuilder.Entity<Organism>()
             //    .HasOne(r => r.Group)
             //    .WithMany()

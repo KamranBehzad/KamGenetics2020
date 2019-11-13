@@ -16,7 +16,7 @@ namespace KamGenetics2020.Model
 
         // Population constants
         private const int OrganismCount = 100;
-        private const int MaxPopulationToSupport = 1000;
+        private const int MaxPopulationToSupport = 100;
         private const int MinPopulationToSupport = 50;
         private const int MeanConsumption = 100;
 
@@ -102,6 +102,8 @@ namespace KamGenetics2020.Model
 
         [NotMapped]
         public int TimeIdx { get; set; }
+        
+        [NotMapped]
         public int Population => Organisms.Count;
 
         private void Populate()
@@ -149,7 +151,11 @@ namespace KamGenetics2020.Model
 
         private int CurrentBabyCount => Babies.Count;
         private int CurrentDyingCount => Organisms.Count(o => o.IsDead);
+        
+        [NotMapped]
         public int LastBabyCount { get; private set; }
+        
+        [NotMapped]
         public int LastDyingCount { get; private set; }
 
         private void RemoveTheDead()
@@ -175,6 +181,7 @@ namespace KamGenetics2020.Model
         /// <summary>
         /// Units of time incremented at each step of the simulation
         /// </summary>
+        [NotMapped]
         public int TimeIncrement { get; set; }
 
         private int GetResourcePerPopulation()
@@ -184,9 +191,13 @@ namespace KamGenetics2020.Model
             return result;
         }
 
+        [NotMapped]
         public double ResourceLevel { get; set; }
+        
         [NotMapped]
         public double PeriodCultivation { get; set; }
+        
+        [NotMapped]
         public double MaxResourceLevel { get; set; }
 
         public DateTime Modified { get; set; }

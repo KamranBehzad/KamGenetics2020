@@ -14,8 +14,6 @@ namespace GeneticsDataAccess
       protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
       {
          optionsBuilder
-            // Uncomment the following line to add EF Command logging
-            //.UseLoggerFactory(ConsoleLoggerFactory)
             .UseSqlServer(ConnectionString);
          base.OnConfiguring(optionsBuilder);
       }
@@ -27,7 +25,7 @@ namespace GeneticsDataAccess
          MapEntities(modelBuilder);
       }
 
-      private static void MapEntities(ModelBuilder modelBuilder)
+      protected override void MapEntities(ModelBuilder modelBuilder)
       {
          WorldMap.Map(modelBuilder);
          WorldStatMap.Map(modelBuilder);

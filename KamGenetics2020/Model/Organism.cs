@@ -75,13 +75,14 @@ namespace KamGenetics2020.Model
         public int Id { get; set; }
 
         public int TimeIdx => World.TimeIdx;
-        public int? WorldId { get; set; }
+        
         public int? ParentId { get; set; }
 
         public Organism Parent { get; set; }
 
         private List<Gene> _genes;
 
+        //[NotMapped]
         public List<Gene> Genes
         {
             get
@@ -242,8 +243,11 @@ namespace KamGenetics2020.Model
 
         public string DeathReason { get; set; }
         public DateTime Modified { get; set; }
+        
         [NotMapped]
         public bool IsDead { get; set; }
+        
+        [NotMapped]
         public double ConsumptionRatePerPeriod { get; set; }
 
         public int? GroupId { get; set; }

@@ -22,7 +22,6 @@ namespace KamGenetics2020.Model
 
         [Key]
         public int Id { get; set; }
-        public int OrganismId { get; set; }
 
         public int Minimum { get; set; }
         public int Maximum { get; set; }
