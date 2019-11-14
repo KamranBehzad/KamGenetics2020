@@ -10,7 +10,7 @@ namespace TestConsole
 {
     class Program
     {
-        const int SimDuration = 1000;
+        const int SimDuration = 200;
         private static Simulator _simulator;
         private static World _world;
 
@@ -126,7 +126,7 @@ namespace TestConsole
 //#if DEBUG
 //            Console.WriteLine("Performing periodic persist ...");
 //#endif
-            if (World.TimeIdx % 100 == 0
+            if (World.TimeIdx % 1 == 0
                 || World.TimeIdx >= Simulator.FinishTimeIndex)
             {
                 _db.SaveChanges();

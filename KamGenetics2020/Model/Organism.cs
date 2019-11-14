@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using KamGenetics2020.Helpers;
 using KamGeneticsLib.Model;
 using KBLib.Helpers;
@@ -78,9 +77,9 @@ namespace KamGenetics2020.Model
 
         public int TimeIdx => World.TimeIdx;
         
-        public int? ParentId { get; set; }
+        public int? ParentId { get; private set; }
 
-        public Organism Parent { get; set; }
+        public Organism Parent { get; private set; }
 
         private List<Gene> _genes;
 
@@ -211,12 +210,14 @@ namespace KamGenetics2020.Model
            if (similarOrganism.Group != null)
            {
               similarOrganism.Group.Join(this);
+              AddLogEntry($"Joined Group {Group.Id}");
            }
            else
            {
               // Need to form a new group comprising of the two organisms
               OrganismGroup newGroup = new OrganismGroup(this, similarOrganism);
               World.AddGroup(newGroup);
+              AddLogEntry($"Formed new Group");
            }
         }
 
@@ -240,6 +241,7 @@ namespace KamGenetics2020.Model
                 babyGene.Mutate();
                 babyGenes.Add(babyGene);
             }
+            AddLogEntry($"Gave birth");
             return NewBaby(World, this, babyGenes);
         }
 
@@ -314,6 +316,27 @@ namespace KamGenetics2020.Model
         public int GetGeneValueByType(GeneEnum geneType)
         {
            return Genes.FirstOrDefault(g => g.GeneType == geneType)?.CurrentValue ?? 0;
+        }
+
+        private List<Log> _logBook;
+
+        //[NotMapped]
+        public List<Log> LogBook
+        {
+           get
+           {
+              if (_logBook == null)
+              {
+                 _logBook = new List<Log>();
+              }
+
+              return _logBook;
+           }
+        }
+
+        private void AddLogEntry(string text)
+        {
+           LogBook.Add(new Log(text, TimeIdx));
         }
 
     }

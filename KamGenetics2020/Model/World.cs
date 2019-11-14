@@ -316,7 +316,41 @@ namespace KamGenetics2020.Model
         /// </summary>
         public Organism SearchVicinityForSimilarCooperativeIndividuals(Organism organism)
         {
+           int vicinitySearchRadius = 10;
+           var curIdx = Organisms.IndexOf(organism);
+
+           int lowerSearchIdx = Math.Max(curIdx - vicinitySearchRadius, 0);
+           int upperSearchIdx = Math.Min(curIdx + vicinitySearchRadius, Population-1);
+           // Search upper
+           for (int i = curIdx+1; i < upperSearchIdx; i++)
+           {
+              if (IsGroupMatch(organism, Organisms[i]))
+              {
+                 return Organisms[i];
+              }
+           }
+           // Search lower
+           for (int i = curIdx-1; i > lowerSearchIdx; i--)
+           {
+              if (Organisms[i].GetGeneValueByType(GeneEnum.Economy) == organism.GetGeneValueByType(GeneEnum.Economy))
+              {
+                 return Organisms[i];
+              }
+           }
            return null;
+        }
+
+        /// <summary>
+        /// Checks if current organism and another organism in the vicinity are a good match to form a group.
+        /// To be a good match:
+        /// 1. The organism in vicinity must also be cooperative and not solo
+        /// 2. Both organisms must have the same economy gene value (worker. thief, etc.)
+        /// </summary>
+        private bool IsGroupMatch(Organism curOrganism, Organism organismInVicinity)
+        {
+           return
+              organismInVicinity.GetGeneValueByType(GeneEnum.Cooperation) == (int)CooperationGene.Cooperative
+              && organismInVicinity.GetGeneValueByType(GeneEnum.Economy) == curOrganism.GetGeneValueByType(GeneEnum.Economy);
         }
     }
 }

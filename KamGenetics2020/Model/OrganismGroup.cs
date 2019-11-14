@@ -9,7 +9,11 @@ namespace KamGenetics2020.Model
     [Serializable]
     public class OrganismGroup
     {
-       public OrganismGroup(Organism organism1, Organism organism2)
+       public OrganismGroup()
+       {
+       }
+
+       public OrganismGroup(Organism organism1, Organism organism2): this()
        {
           Join(organism1);
           Join(organism2);
@@ -40,7 +44,7 @@ namespace KamGenetics2020.Model
 
         public double StorageCapacity { get; set; }
 
-        public double OrganismResourceShare => StorageLevel / Population;
+        public double OrganismResourceShare => Population > 0 ? StorageLevel / Population : 0;
         public double UnfilledStorageCapacity => StorageCapacity - StorageLevel;
 
         public OrganismGroup Join(Organism organism)
