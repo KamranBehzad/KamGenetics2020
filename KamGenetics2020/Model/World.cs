@@ -38,6 +38,7 @@ namespace KamGenetics2020.Model
         }
 
         private List<Organism> _organisms;
+        private List<OrganismGroup> _groups;
 
         private List<Organism> Organisms
         {
@@ -50,6 +51,19 @@ namespace KamGenetics2020.Model
 
                 return _organisms;
             }
+        }
+
+        private List<OrganismGroup> Groups
+        {
+           get
+           {
+              if (_groups == null)
+              {
+                 _groups = new List<OrganismGroup>();
+              }
+
+              return _groups;
+           }
         }
 
         private List<Organism> _deadOrganisms;
@@ -179,6 +193,11 @@ namespace KamGenetics2020.Model
             Babies.Add(baby);
         }
 
+        public void AddGroup(OrganismGroup group)
+        {
+           Groups.Add(group);
+        }
+
         public void Reset()
         {
             TimeIdx = 0;
@@ -289,6 +308,15 @@ namespace KamGenetics2020.Model
         {
             ThisPeriodStats.PeriodConsumption += consumption;
             return ThisPeriodStats.PeriodConsumption;
+        }
+
+        /// <summary>
+        /// Used when a cooperative organism is searching its vicinity for another cooperative organism that is similar minded.
+        /// Similar minded means they have the same economy gene value (
+        /// </summary>
+        public Organism SearchVicinityForSimilarCooperativeIndividuals(Organism organism)
+        {
+           return null;
         }
     }
 }

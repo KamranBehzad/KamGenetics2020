@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using KamGenetics2020.Helpers;
 using KamGeneticsLib.Model;
 using KBLib.Helpers;
@@ -101,7 +102,7 @@ namespace KamGenetics2020.Model
         public void ObtainResources()
         {
             // +consumptionRatePerPeriod is because when organism is at full storage capacity, it can still find and consume as per its consumption rate
-            var resourceFound = World.OrganismSeeksFood(ConsumptionRatePerPeriod, RemainingStorageCapacity + ConsumptionRatePerPeriod);
+            var resourceFound = World.OrganismSeeksFood(ConsumptionRatePerPeriod, UnfilledStorageCapacity + ConsumptionRatePerPeriod);
             if (IsInGroup)
             {
                 Group.IncreaseResources(resourceFound);
@@ -118,15 +119,10 @@ namespace KamGenetics2020.Model
             StorageLevel = Math.Min(StorageLevel, StorageCapacity+ConsumptionRatePerPeriod);
         }
 
-        public double RemainingStorageCapacity
-        {
-            get
-            {
-                return IsInGroup
-                    ? Group.RemainingStorageCapacity
-                    : StorageCapacity - StorageLevel;
-            }
-        }
+        public double UnfilledStorageCapacity =>
+           IsInGroup
+              ? Group.UnfilledStorageCapacity
+              : StorageCapacity - StorageLevel;
 
         private void ConsumeResources()
         {
@@ -177,9 +173,51 @@ namespace KamGenetics2020.Model
                 Die(reason);
                 return;
             }
+
+            JoinGroup();
             ObtainResources();
             ConsumeResources();
             ProcreateAsexual();
+        }
+
+        /// <summary>
+        /// If individual has tendency to form/join groups and not already part of one, will try here to form or join a group with other similar organisms.
+        /// Will search for a like-minded individual in its vicinity.
+        /// If other individual is in a group then will join that group.
+        /// If other individual is not in a group then both will form a new group.
+        /// </summary>
+        private void JoinGroup()
+        {
+           // Ignore if already in group
+           if (Group != null)
+           {
+              return;
+           }
+           // Ignore if not inclined to join groups
+           if (GetGeneValueByType(GeneEnum.Cooperation) == (int)CooperationGene.Solo)
+           {
+              return;
+           }
+           // Is cooperative and not already part of a group, so will look to join or form a group
+           // Will search for a like-minded individual in its vicinity.
+           // If other individual is in a group then will join that group.
+           // If other individual is not in a group then both will form a new group.
+           Organism similarOrganism = World.SearchVicinityForSimilarCooperativeIndividuals(this);
+           if (similarOrganism == null)
+           {
+              return;
+           }
+
+           if (similarOrganism.Group != null)
+           {
+              similarOrganism.Group.Join(this);
+           }
+           else
+           {
+              // Need to form a new group comprising of the two organisms
+              OrganismGroup newGroup = new OrganismGroup(this, similarOrganism);
+              World.AddGroup(newGroup);
+           }
         }
 
 
@@ -241,6 +279,8 @@ namespace KamGenetics2020.Model
             DeathReason = reason;
             Dod = TimeIdx;
             FinalAge = Age;
+            // Remove from group if any
+            Group?.Remove(this);
         }
 
         public string DeathReason { get; set; }
@@ -253,24 +293,28 @@ namespace KamGenetics2020.Model
         public double ConsumptionRatePerPeriod { get; set; }
 
         public int? GroupId { get; set; }
+        
         public OrganismGroup Group { get; set; }
+        
         public double StorageCapacity => DefaultStorageCapacity;
+        
         [NotMapped]
         public double StorageLevel { get; set; }
-        public double GroupStorage
-        {
-            get { return Group == null ? 0 : Group.StorageLevel; }
-        }
+        
+        public double GroupStorage => Group?.StorageLevel ?? 0;
 
 
-        public double GroupStorageCapacity
-        {
-            get { return Group == null ? 0 : Group.StorageCapacity; }
-        }
+        public double GroupStorageCapacity => Group?.StorageCapacity ?? 0;
 
         public Gene GetGeneByType(GeneEnum geneType)
         {
-          return Genes.Where(g => g.GeneType == geneType).FirstOrDefault();
+          return Genes.FirstOrDefault(g => g.GeneType == geneType);
         }
+        
+        public int GetGeneValueByType(GeneEnum geneType)
+        {
+           return Genes.FirstOrDefault(g => g.GeneType == geneType)?.CurrentValue ?? 0;
+        }
+
     }
 }

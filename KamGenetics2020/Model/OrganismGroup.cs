@@ -1,16 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using KamGeneticsLib.Model;
 
 namespace KamGenetics2020.Model
 {
     [Serializable]
     public class OrganismGroup
     {
+       public OrganismGroup(Organism organism1, Organism organism2)
+       {
+          Join(organism1);
+          Join(organism2);
+       }
+
         [Key]
         public int Id { get; set; }
 
-        public double Count => Organisms.Count;
+        public double Population => Organisms.Count;
 
         private List<Organism> _organisms;
 
@@ -32,19 +40,20 @@ namespace KamGenetics2020.Model
 
         public double StorageCapacity { get; set; }
 
-        public double OrganismResourceShare => StorageLevel / Count;
-        public double RemainingStorageCapacity => StorageCapacity - StorageLevel;
+        public double OrganismResourceShare => StorageLevel / Population;
+        public double UnfilledStorageCapacity => StorageCapacity - StorageLevel;
 
-        public OrganismGroup Add(ref Organism organism)
+        public OrganismGroup Join(Organism organism)
         {
             Organisms.Add(organism);
+            organism.Group = this;
             organism.GroupId = Id;
             StorageCapacity += organism.StorageCapacity;
             StorageLevel += organism.StorageLevel;
             return this;
         }
 
-        public OrganismGroup Remove(ref Organism organism)
+        public OrganismGroup Remove(Organism organism)
         {
             Organisms.Remove(organism);
             StorageCapacity -= organism.StorageCapacity;
@@ -63,6 +72,7 @@ namespace KamGenetics2020.Model
             StorageLevel = Math.Max(0, StorageLevel);
             return StorageLevel;
         }
+
         /// <summary>
         /// Called when an organism adds to Group storage
         /// </summary>
@@ -73,6 +83,8 @@ namespace KamGenetics2020.Model
             StorageLevel = Math.Min(StorageLevel, StorageCapacity);
             return StorageLevel;
         }
+
+        public EconomyGene GroupEconomy => (EconomyGene)Organisms.FirstOrDefault().GetGeneValueByType(GeneEnum.Economy);
 
     }
 }
