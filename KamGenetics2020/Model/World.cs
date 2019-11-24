@@ -23,6 +23,10 @@ namespace KamGenetics2020.Model
 
         // Resource constants
         private const double DefaultMaxResourceLevel = double.MaxValue;
+        // Internal Ids
+        private static int _organismId = 1;
+        private static int _groupId = 1;
+
 
         public World()
         {
@@ -352,5 +356,20 @@ namespace KamGenetics2020.Model
               organismInVicinity.GetGeneValueByType(GeneEnum.Cooperation) == (int)CooperationGene.Cooperative
               && organismInVicinity.GetGeneValueByType(GeneEnum.Economy) == curOrganism.GetGeneValueByType(GeneEnum.Economy);
         }
-    }
+
+      //public int AssignOrganismId(Organism organism)
+      //{
+      //   var result = _organismId++;
+      //   organism.Id = result;
+      //   return result;
+      //}
+
+      //public int AssignGroupId(OrganismGroup group)
+      //{
+      //   var result = _groupId++;
+      //   group.Id = result;
+      //   return result;
+      //}
+
+   }
 }

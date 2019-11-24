@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using System.Linq;
 using KamGenetics2020.Helpers;
 using KamGeneticsLib.Model;
@@ -10,6 +11,7 @@ using KBLib.Helpers;
 namespace KamGenetics2020.Model
 {
     [Serializable]
+    [DebuggerDisplay("Id:{Id} Group:{GroupId}")]
     public class Organism
     {
         // Age constants
@@ -34,6 +36,7 @@ namespace KamGenetics2020.Model
         public Organism(World world, Organism parent) : this()
         {
             World = world;
+            //world.AssignOrganismId(this);
             Parent = parent;
             ParentId = Parent?.Id;
 
@@ -54,13 +57,14 @@ namespace KamGenetics2020.Model
                 World = world,
                 Parent = parent,
                 ParentId = parent?.Id,
-                Group = parent?.Group,
-                GroupId = parent?.GroupId,
                 Dob = TimeIdx,
                 ConsumptionRatePerPeriod = DefaultConsumptionRatePerPeriod,
                 StorageLevel = InitialStorageLevel,
                 Genes = genes
             };
+            //World.AssignOrganismId(baby);
+            // Baby automatically becomes part of parent's group
+            parent?.Group?.Join(baby);
             return baby;
         }
 
@@ -215,7 +219,7 @@ namespace KamGenetics2020.Model
            else
            {
               // Need to form a new group comprising of the two organisms
-              OrganismGroup newGroup = new OrganismGroup(this, similarOrganism);
+              OrganismGroup newGroup = new OrganismGroup(World, this, similarOrganism);
               World.AddGroup(newGroup);
               AddLogEntry($"Formed new Group");
            }
@@ -237,7 +241,7 @@ namespace KamGenetics2020.Model
             // baby's genes initiate from parent
             foreach (var parentGene in Genes)
             {
-               var babyGene = parentGene.CreateCopy();
+                var babyGene = parentGene.CreateCopy();
                 babyGene.Mutate();
                 babyGenes.Add(babyGene);
             }

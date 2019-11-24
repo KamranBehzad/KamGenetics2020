@@ -1,27 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using System.Linq;
 using KamGeneticsLib.Model;
 
 namespace KamGenetics2020.Model
 {
     [Serializable]
+    [DebuggerDisplay("Id:{Id} Pop:{Population}")]
     public class OrganismGroup
     {
        public OrganismGroup()
        {
        }
 
-       public OrganismGroup(Organism organism1, Organism organism2): this()
+       public OrganismGroup(World world, Organism organism1, Organism organism2): this()
        {
+          World = world;
+          //world.AssignGroupId(this);
           Join(organism1);
           Join(organism2);
        }
+      public World World { get; set; }
+
 
         [Key]
         public int Id { get; set; }
-
+      
         public double Population => Organisms.Count;
 
         private List<Organism> _organisms;
@@ -39,9 +46,10 @@ namespace KamGenetics2020.Model
             }
         }
 
+        [NotMapped]
         public double StorageLevel { get; set; }
 
-
+        [NotMapped]
         public double StorageCapacity { get; set; }
 
         public double OrganismResourceShare => Population > 0 ? StorageLevel / Population : 0;
