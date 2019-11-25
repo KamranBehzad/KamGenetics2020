@@ -19,7 +19,6 @@ namespace KamGenetics2020.Model
        public OrganismGroup(World world, Organism organism1, Organism organism2): this()
        {
           World = world;
-          //world.AssignGroupId(this);
           Join(organism1);
           Join(organism2);
        }
@@ -67,11 +66,12 @@ namespace KamGenetics2020.Model
 
         public OrganismGroup Remove(Organism organism)
         {
-            Organisms.Remove(organism);
-            StorageCapacity -= organism.StorageCapacity;
-            // A member is gone. Capacity is diminished. Ensure actual level does not exceed capacity.
-            StorageLevel = Math.Min(StorageLevel, StorageCapacity);
-            return this;
+           // we do not physically remove the organism from the group for record keeping purposes
+           //Organisms.Remove(organism);
+           StorageCapacity -= organism.StorageCapacity;
+           // A member is gone. Capacity is diminished. Ensure actual level does not exceed capacity.
+           StorageLevel = Math.Min(StorageLevel, StorageCapacity);
+           return this;
         }
 
         /// <summary>

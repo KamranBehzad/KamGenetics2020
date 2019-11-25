@@ -28,4 +28,12 @@ namespace KamGeneticsLib.Model
       Murderer = 4,   // steals from others. Kills them if necessary.
    }
 
+   public enum LogLevel
+   {
+      None = 0,
+      MostImportant = 1,
+      Important = 2,
+      Daily = 128,
+      All = 255
+   }
 }

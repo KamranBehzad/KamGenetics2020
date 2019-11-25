@@ -27,7 +27,8 @@ namespace KamGenetics2020.Model
         private const double DefaultStorageCapacity = 10;
         private const double InitialStorageLevel = 1;
 
-
+         //
+         protected LogLevel OrgLogLevel = LogLevel.All;
 
         public Organism()
         {
@@ -36,7 +37,6 @@ namespace KamGenetics2020.Model
         public Organism(World world, Organism parent) : this()
         {
             World = world;
-            //world.AssignOrganismId(this);
             Parent = parent;
             ParentId = Parent?.Id;
 
@@ -62,10 +62,20 @@ namespace KamGenetics2020.Model
                 StorageLevel = InitialStorageLevel,
                 Genes = genes
             };
-            //World.AssignOrganismId(baby);
+            // Give half resources to baby
+            ShareResourcesWith(baby);
             // Baby automatically becomes part of parent's group
             parent?.Group?.Join(baby);
             return baby;
+        }
+
+        private void ShareResourcesWith(Organism organismReceiver)
+        {
+           var exchangeQty = StorageLevel / 2;
+           organismReceiver.StorageLevel += exchangeQty;
+           StorageLevel -= exchangeQty;
+           AddLogEntry("Gave resources", exchangeQty, LogLevel.Important);
+           organismReceiver.AddLogEntry("Received resources", exchangeQty, LogLevel.Important);
         }
 
         private void InitGenes()
@@ -106,6 +116,7 @@ namespace KamGenetics2020.Model
         {
             // +consumptionRatePerPeriod is because when organism is at full storage capacity, it can still find and consume as per its consumption rate
             var resourceFound = World.OrganismSeeksFood(ConsumptionRatePerPeriod, UnfilledStorageCapacity + ConsumptionRatePerPeriod);
+            AddLogEntry("Found resources", resourceFound, LogLevel.Daily);
             if (IsInGroup)
             {
                 Group.IncreaseResources(resourceFound);
@@ -132,6 +143,20 @@ namespace KamGenetics2020.Model
             double consumption = Math.Min(AvailableResources, ConsumptionRatePerPeriod);
             World.RecordOrganismConsumptionInCurrentPeriod(consumption);
             DecreaseResources(consumption);
+            AddLogEntry("Consumed resources", consumption, LogLevel.Daily);
+            // Also log storage level
+            if (OrgLogLevel >= LogLevel.Daily)
+            {
+               if (IsInGroup)
+               {
+                  AddLogEntry("Resource Level G", Group.StorageLevel, LogLevel.Daily);
+               }
+               else
+               {
+                  AddLogEntry("Resource Level", StorageLevel, LogLevel.Daily);
+               }
+            }
+
             // todo develop consumption & starvation model
             if (consumption < ConsumptionRatePerPeriod)
             {
@@ -214,14 +239,14 @@ namespace KamGenetics2020.Model
            if (similarOrganism.Group != null)
            {
               similarOrganism.Group.Join(this);
-              AddLogEntry($"Joined Group {Group.Id}");
+              AddLogEntry("Joined Group", Group.Id, LogLevel.MostImportant);
            }
            else
            {
               // Need to form a new group comprising of the two organisms
               OrganismGroup newGroup = new OrganismGroup(World, this, similarOrganism);
               World.AddGroup(newGroup);
-              AddLogEntry($"Formed new Group");
+              AddLogEntry("Formed new Group", 0, LogLevel.MostImportant);
            }
         }
 
@@ -245,7 +270,7 @@ namespace KamGenetics2020.Model
                 babyGene.Mutate();
                 babyGenes.Add(babyGene);
             }
-            AddLogEntry($"Gave birth");
+            AddLogEntry("Gave birth", 0, LogLevel.Important);
             return NewBaby(World, this, babyGenes);
         }
 
@@ -281,6 +306,7 @@ namespace KamGenetics2020.Model
 
         private void Die(string reason)
         {
+            AddLogEntry($"Dying: {reason}, Age:", Age, LogLevel.Important);
             IsDead = true;
             DeathReason = reason;
             Dod = TimeIdx;
@@ -338,9 +364,13 @@ namespace KamGenetics2020.Model
            }
         }
 
-        private void AddLogEntry(string text)
+        private void AddLogEntry(string text, double qty = 0, LogLevel level = LogLevel.All)
         {
-           LogBook.Add(new Log(text, TimeIdx));
+           var logApproval = (int)level & (int)OrgLogLevel;
+           if (logApproval > 0)
+           {
+              LogBook.Add(new Log(text, qty, TimeIdx));
+           }
         }
 
     }

@@ -357,19 +357,5 @@ namespace KamGenetics2020.Model
               && organismInVicinity.GetGeneValueByType(GeneEnum.Economy) == curOrganism.GetGeneValueByType(GeneEnum.Economy);
         }
 
-      //public int AssignOrganismId(Organism organism)
-      //{
-      //   var result = _organismId++;
-      //   organism.Id = result;
-      //   return result;
-      //}
-
-      //public int AssignGroupId(OrganismGroup group)
-      //{
-      //   var result = _groupId++;
-      //   group.Id = result;
-      //   return result;
-      //}
-
    }
 }

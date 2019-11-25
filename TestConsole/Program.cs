@@ -8,130 +8,153 @@ using KBLib.Helpers;
 
 namespace TestConsole
 {
-    class Program
-    {
-        const int SimDuration = 100;
-        private static Simulator _simulator;
-        private static World _world;
+   class Program
+   {
+      const int SimDuration = 100;
+      private static Simulator _simulator;
+      private static World _world;
 
-        private static GeneticsDbContext _db;
+      private static GeneticsDbContext _db;
+      private static bool _dbRun = true;   // if this is false then it's a debug run only. no need for db data storage
 
-        private static Simulator Simulator
-        {
-            get
+      private static Simulator Simulator
+      {
+         get
+         {
+            if (_simulator == null)
             {
-                if (_simulator == null)
-                {
-                    _simulator = new Simulator(SimDuration);
-                    _simulator.OnSimulate += World.SimulateSinglePeriod;
-                    _simulator.OnSimulate += Report;
-                    _simulator.OnSimulate += PersistWorldToDb;
-                    //_simulator.OnSimulate += PropertyGridRefresh;
-                    _simulator.OnReset += World.Reset;
-                    _simulator.OnSimulationCompleted += SimulationCompleted;
-                }
-                return _simulator;
+               _simulator = new Simulator(SimDuration);
+               _simulator.OnSimulate += World.SimulateSinglePeriod;
+               _simulator.OnSimulate += Report;
+               _simulator.OnSimulate += PersistWorldToDb;
+               //_simulator.OnSimulate += PropertyGridRefresh;
+               _simulator.OnReset += World.Reset;
+               _simulator.OnSimulationCompleted += SimulationCompleted;
             }
-        }
+            return _simulator;
+         }
+      }
 
-        static void Main()
-        {
-           ConsoleHelper.WhiteBackground();
-           ConsoleHelper.Black();
-           ConsoleHelper.BeginProgram();
-            CreateDb();
-            DoInitialPersist();
-            _startTime = DateTime.Now;
-            Simulator.Start();
-        }
+      static void Main()
+      {
+         ConsoleHelper.WhiteBackground();
+         ConsoleHelper.Black();
+         ConsoleHelper.BeginProgram();
+         CreateDb();
+         DoInitialPersist();
+         _startTime = DateTime.Now;
+         Simulator.Start();
+      }
 
-        private static World World
-        {
-            get
+      private static World World
+      {
+         get
+         {
+            if (_world == null)
             {
-                if (_world == null)
-                {
-                    _world = new World();
-                }
-                return _world;
+               _world = new World();
             }
-        }
+            return _world;
+         }
+      }
 
 
-        private static void SimulationCompleted()
-        {
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine();
-            Console.WriteLine("Simulation completed.");
-            Console.WriteLine();
-            ConsoleHelper.EndProgram();
-        }
+      private static void SimulationCompleted()
+      {
+         Console.WriteLine();
+         Console.WriteLine();
+         Console.WriteLine();
+         Console.WriteLine("Simulation completed.");
+         Console.WriteLine();
+         ConsoleHelper.EndProgram();
+      }
 
-        private static DateTime _startTime;
+      private static DateTime _startTime;
 
-        private static void Report()
-        {
-            var elapsed = DateTime.Now - _startTime;
-            var estimatedMilliseconds = elapsed.TotalMilliseconds / World.TimeIdx * (SimDuration-World.TimeIdx);
-            var estimatedFinish = XDateTime.MilliSecParseToSec(estimatedMilliseconds);
+      private static void Report()
+      {
+         var elapsed = DateTime.Now - _startTime;
+         var estimatedMilliseconds = elapsed.TotalMilliseconds / World.TimeIdx * (SimDuration - World.TimeIdx);
+         var estimatedFinish = XDateTime.MilliSecParseToSec(estimatedMilliseconds);
 
-            ConsoleHelper.Black();
-            Console.Write($"{Simulator.TimeIndex}:");
-            ConsoleHelper.DarkRed();
-            Console.Write($" Population: {World.Population}".PadRight(20));
-            ConsoleHelper.DarkGreen();
-            Console.Write($" Resources: {World.ResourceLevel:n0}".PadRight(22));
-            ConsoleHelper.Black();
-            Console.Write($" Dying: {World.LastDyingCount}".PadRight(16));
-            ConsoleHelper.White();
-            Console.Write($" Born: {World.LastBabyCount}".PadRight(16));
-            ConsoleHelper.Red();
-            Console.WriteLine($" ETA: {estimatedFinish}");
+         ConsoleHelper.Black();
+         Console.Write($"{Simulator.TimeIndex}:");
+         ConsoleHelper.DarkRed();
+         Console.Write($" Population: {World.Population}".PadRight(20));
+         ConsoleHelper.DarkGreen();
+         Console.Write($" Resources: {World.ResourceLevel:n0}".PadRight(22));
+         ConsoleHelper.Black();
+         Console.Write($" Dying: {World.LastDyingCount}".PadRight(16));
+         ConsoleHelper.White();
+         Console.Write($" Born: {World.LastBabyCount}".PadRight(16));
+         ConsoleHelper.Red();
+         Console.WriteLine($" ETA: {estimatedFinish}");
 
 
-            ConsoleHelper.Black();
-        }
+         ConsoleHelper.Black();
+      }
 
-        private static void DoInitialPersist()
-        {
+      private static void DoInitialPersist()
+      {
+         if (_dbRun)
+         {
             Console.WriteLine("Initialising the data context ...");
 
             _db.Worlds.Add(World);
             PersistWorldToDb();
-        }
+         }
+         else
+         {
+            Console.WriteLine("Debug Run. No DB init.");
+         }
+         ConsoleHelper.WriteLine();
+      }
 
-        private static void CreateDb()
-        {
+      private static void CreateDb()
+      {
+         if (_dbRun)
+         {
             Console.WriteLine("Creating DB ...");
             _db = new GeneticsDbContext(GetSqlConnectionString(), enforceDbRecreation: true);
-        }
+         }
+         else
+         {
+            Console.WriteLine("Debug Run. No DB creation.");
+         }
+      }
 
-        public static string GetSqlConnectionString()
-        {
-            var connectionStringAlias = "KamGeneticsLibSqlAlias";
-            var connectionString = ConfigurationManager.ConnectionStrings[connectionStringAlias].ConnectionString;
-            // Create a date time dependent DB name
-            connectionString = connectionString.Replace("KamGeneticsLibDbName", GetDynamicDbName());
-            return connectionString;
-        }
+      public static string GetSqlConnectionString()
+      {
+         var connectionStringAlias = "KamGeneticsLibSqlAlias";
+         var connectionString = ConfigurationManager.ConnectionStrings[connectionStringAlias].ConnectionString;
+         // Create a date time dependent DB name
+         connectionString = connectionString.Replace("KamGeneticsLibDbName", GetDynamicDbName());
+         return connectionString;
+      }
 
-        private static string GetDynamicDbName()
-        {
-            return $"KamGenetics{DateTime.Now.FullDateTimeParse()}";
-        }
+      private static string GetDynamicDbName()
+      {
+         return $"KamGenetics{DateTime.Now.FullDateTimeParse()}";
+      }
 
-        private static void PersistWorldToDb()
-        {
-//#if DEBUG
-//         Console.WriteLine("Performing periodic persist ...");
-//#endif
+      private static void PersistWorldToDb()
+      {
+         //#if DEBUG
+         //         Console.WriteLine("Performing periodic persist ...");
+         //#endif
          if (World.TimeIdx % 1 == 0
                 || World.TimeIdx >= Simulator.FinishTimeIndex)
-            {
-                _db.SaveChanges();
-            }
-        }
+         {
+            SaveDbChanges();
+         }
+      }
 
-    }
+      private static void SaveDbChanges()
+      {
+         if (_dbRun)
+         {
+            _db.SaveChanges();
+         }
+      }
+   }
 }
