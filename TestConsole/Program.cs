@@ -10,12 +10,15 @@ namespace TestConsole
 {
    class Program
    {
-      const int SimDuration = 100;
+      const int SimDuration = 300;
       private static Simulator _simulator;
       private static World _world;
 
       private static GeneticsDbContext _db;
-      private static bool _dbRun = true;   // if this is false then it's a debug run only. no need for db data storage
+
+      // *************************************************************************************************************
+      private static bool _dbRun = true; // if this is false then it's a debug run only. no need for db data storage
+      // *************************************************************************************************************
 
       private static Simulator Simulator
       {
@@ -31,6 +34,7 @@ namespace TestConsole
                _simulator.OnReset += World.Reset;
                _simulator.OnSimulationCompleted += SimulationCompleted;
             }
+
             return _simulator;
          }
       }
@@ -54,6 +58,7 @@ namespace TestConsole
             {
                _world = new World();
             }
+
             return _world;
          }
       }
@@ -61,10 +66,13 @@ namespace TestConsole
 
       private static void SimulationCompleted()
       {
+         var elapsed = DateTime.Now - _startTime;
+
          Console.WriteLine();
          Console.WriteLine();
          Console.WriteLine();
          Console.WriteLine("Simulation completed.");
+         Console.WriteLine($"Duration: {elapsed.TotalSeconds:N} s");
          Console.WriteLine();
          ConsoleHelper.EndProgram();
       }
@@ -107,6 +115,7 @@ namespace TestConsole
          {
             Console.WriteLine("Debug Run. No DB init.");
          }
+
          ConsoleHelper.WriteLine();
       }
 
@@ -137,18 +146,6 @@ namespace TestConsole
          return $"KamGenetics{DateTime.Now.FullDateTimeParse()}";
       }
 
-      private static void PersistWorldToDb()
-      {
-         //#if DEBUG
-         //         Console.WriteLine("Performing periodic persist ...");
-         //#endif
-         if (World.TimeIdx % 1 == 0
-                || World.TimeIdx >= Simulator.FinishTimeIndex)
-         {
-            SaveDbChanges();
-         }
-      }
-
       private static void SaveDbChanges()
       {
          if (_dbRun)
@@ -156,5 +153,19 @@ namespace TestConsole
             _db.SaveChanges();
          }
       }
+
+      private static void PersistWorldToDb()
+      {
+         //#if DEBUG
+         //         Console.WriteLine("Performing periodic persist ...");
+         //#endif
+         var dbUpdateInterval = 100;
+         if (World.TimeIdx % dbUpdateInterval == 0
+             || World.TimeIdx >= Simulator.FinishTimeIndex)
+         {
+            SaveDbChanges();
+         }
+      }
+
    }
 }

@@ -19,13 +19,10 @@ namespace KamGenetics2020.Model
         private const int OrganismCount = 100;
         private const int MaxPopulationToSupport = 100;
         private const int MinPopulationToSupport = 50;
-        private const int MeanConsumption = 100;
+        private const int MeanOrganismLifetimeConsumption = 100;
 
         // Resource constants
         private const double DefaultMaxResourceLevel = double.MaxValue;
-        // Internal Ids
-        private static int _organismId = 1;
-        private static int _groupId = 1;
 
 
         public World()
@@ -38,7 +35,7 @@ namespace KamGenetics2020.Model
         private void InitResourceLevel()
         {
             MaxResourceLevel = DefaultMaxResourceLevel;
-            ResourceLevel = MaxPopulationToSupport * MeanConsumption;
+            ResourceLevel = MaxPopulationToSupport * MeanOrganismLifetimeConsumption;
         }
 
         private List<Organism> _organisms;

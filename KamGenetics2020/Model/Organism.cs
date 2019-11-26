@@ -82,13 +82,13 @@ namespace KamGenetics2020.Model
         {
             Genes.Add(GeneHelper.CreateCooperationGene(RandomHelper.StandardGeneratorInstance.Next(1,2)));
             Genes.Add(GeneHelper.CreateEconomyGene());
-            var geneValue = RandomHelper.StandardGeneratorInstance.Next(0, 10);
-            Genes.Add(GeneHelper.CreateLibidoGene(geneValue));
+            Genes.Add(GeneHelper.CreateLibidoGene());
         }
 
         [Key]
         public int Id { get; set; }
 
+        // ReSharper disable once MemberCanBePrivate.Global
         public int TimeIdx => World.TimeIdx;
         
         public int? ParentId { get; private set; }
@@ -116,7 +116,7 @@ namespace KamGenetics2020.Model
         {
             // +consumptionRatePerPeriod is because when organism is at full storage capacity, it can still find and consume as per its consumption rate
             var resourceFound = World.OrganismSeeksFood(ConsumptionRatePerPeriod, UnfilledStorageCapacity + ConsumptionRatePerPeriod);
-            AddLogEntry("Found resources", resourceFound, LogLevel.Daily);
+            AddLogEntry("Found resources", resourceFound, LogLevel.EveryInterval);
             if (IsInGroup)
             {
                 Group.IncreaseResources(resourceFound);
@@ -143,17 +143,17 @@ namespace KamGenetics2020.Model
             double consumption = Math.Min(AvailableResources, ConsumptionRatePerPeriod);
             World.RecordOrganismConsumptionInCurrentPeriod(consumption);
             DecreaseResources(consumption);
-            AddLogEntry("Consumed resources", consumption, LogLevel.Daily);
+            AddLogEntry("Consumed resources", consumption, LogLevel.EveryInterval);
             // Also log storage level
-            if (OrgLogLevel >= LogLevel.Daily)
+            if (OrgLogLevel >= LogLevel.EveryInterval)
             {
                if (IsInGroup)
                {
-                  AddLogEntry("Resource Level G", Group.StorageLevel, LogLevel.Daily);
+                  AddLogEntry("Resource Level G", Group.StorageLevel, LogLevel.EveryInterval);
                }
                else
                {
-                  AddLogEntry("Resource Level", StorageLevel, LogLevel.Daily);
+                  AddLogEntry("Resource Level", StorageLevel, LogLevel.EveryInterval);
                }
             }
 
@@ -167,6 +167,11 @@ namespace KamGenetics2020.Model
                     Die("Starvation");
                 }
             }
+            else
+            {
+               Starvation = 0;
+            }
+            AddLogEntry("Starvation", Starvation, LogLevel.EveryInterval);
         }
 
         private void DecreaseResources(double consumption)
@@ -278,7 +283,7 @@ namespace KamGenetics2020.Model
         {
            return Age >= MaturityStart
                   && Age <= MaturityFinish
-                  && RandomHelper.StandardGeneratorInstance.Next(100) < Genes.First(g => g.GeneType == GeneEnum.Libido).CurrentValue;
+                  && RandomHelper.StandardGeneratorInstance.Next(100) < GetGeneValueByType(GeneEnum.Libido);
         }
 
         public World World { get; set; }

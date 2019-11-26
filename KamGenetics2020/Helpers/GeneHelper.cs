@@ -5,7 +5,12 @@ namespace KamGenetics2020.Helpers
 {
     public static class GeneHelper
     {
-        /// <summary>
+       // Constants
+       private const int MinLibido = 1;
+       private const int MaxLibido = 5;
+
+
+       /// <summary>
         /// Economy Gene:
         /// 1. Worker - will cultivate resources, never steals.
         /// 2. Survivor - will cultivate resources. If none available might steal.
@@ -51,15 +56,15 @@ namespace KamGenetics2020.Helpers
             return gene;
         }
 
-        public static Gene CreateLibidoGene(int value = 5)
+        public static Gene CreateLibidoGene(int value = (MaxLibido-MinLibido)/2)
         {
             // ReSharper disable once UseObjectOrCollectionInitializer
             var gene = new Gene
             {
                 TypeDescription = "Libido",
                 LastValue = value,
-                Minimum = 0,
-                Maximum = 10,
+                Minimum = MinLibido,
+                Maximum = MaxLibido,
                 CanMutate = true,
                 IsDormant = false,
                 GeneType = GeneEnum.Libido

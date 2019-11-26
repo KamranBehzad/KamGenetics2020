@@ -33,7 +33,7 @@ namespace KamGeneticsLib.Model
       None = 0,
       MostImportant = 1,
       Important = 2,
-      Daily = 128,
+      EveryInterval = 128,
       All = 255
    }
 }
