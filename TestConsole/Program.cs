@@ -48,12 +48,14 @@ namespace TestConsole
          ConsoleHelper.BeginProgram();
 
          // Init random seed
-         int? randomSeed = null; // can be any unit user wishes. If null given then every run will be different.
+         int? randomSeed = 1344; // can be any uint value user wishes + null. If null given then every run will be different.
          RandomHelper.InitSeed(randomSeed);
 
          // Init DB
          CreateDb();
          DoInitialPersist();
+         
+         // Start simulation
          _startTime = DateTime.Now;
          Simulator.Start();
       }
