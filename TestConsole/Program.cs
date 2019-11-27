@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Runtime.CompilerServices;
 using GeneticsDataAccess;
 using KamGenetics2020.Model;
 using KBLib.Classes;
@@ -10,7 +11,7 @@ namespace TestConsole
 {
    class Program
    {
-      const int SimDuration = 1000;
+      const int SimDuration = 100;
       private static Simulator _simulator;
       private static World _world;
 
@@ -41,9 +42,16 @@ namespace TestConsole
 
       static void Main()
       {
+         // Init console
          ConsoleHelper.WhiteBackground();
          ConsoleHelper.Black();
          ConsoleHelper.BeginProgram();
+
+         // Init random seed
+         int? randomSeed = null; // can be any unit user wishes. If null given then every run will be different.
+         RandomHelper.InitSeed(randomSeed);
+
+         // Init DB
          CreateDb();
          DoInitialPersist();
          _startTime = DateTime.Now;

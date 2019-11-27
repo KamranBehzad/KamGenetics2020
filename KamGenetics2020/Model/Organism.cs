@@ -29,10 +29,11 @@ namespace KamGenetics2020.Model
 
       // Log constants
       private string _logPriority1 = "0001";
+      private string _logPriorityIsBorn = "0010";
       private string _logPriorityFormJoinGroup = "0100";
       private string _logPriorityFoundResource = "0200";
       private string _logPriorityConsumeResource = "0300";
-      private string _logPriorityBirth = "0400";
+      private string _logPriorityGaveBirth = "0400";
       private string _logPriorityResourceExchange = "0500";
       private string _logPriorityDeath = "9999";
 
@@ -269,8 +270,10 @@ namespace KamGenetics2020.Model
             babyGene.Mutate();
             babyGenes.Add(babyGene);
          }
-         AddLogEntry(_logPriorityBirth, "Gave birth", StorageLevel, Starvation, null, LogLevel.Important);
-         return NewBaby(World, this, babyGenes);
+         AddLogEntry(_logPriorityGaveBirth, "Gave birth", StorageLevel, Starvation, null, LogLevel.Important);
+         var baby = NewBaby(World, this, babyGenes);
+         baby.AddLogEntry(_logPriorityIsBorn, "Is born", StorageLevel, Starvation, null, LogLevel.EveryInterval);
+         return baby;
       }
 
       private bool CanProcreate()
