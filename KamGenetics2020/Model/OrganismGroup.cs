@@ -67,7 +67,8 @@ namespace KamGenetics2020.Model
         public OrganismGroup Remove(Organism organism)
         {
            // we do not physically remove the organism from the group for record keeping purposes
-           //Organisms.Remove(organism);
+           DepartedOrganisms.Add(organism);
+           Organisms.Remove(organism);
            StorageCapacity -= organism.StorageCapacity;
            // A member is gone. Capacity is diminished. Ensure actual level does not exceed capacity.
            StorageLevel = Math.Min(StorageLevel, StorageCapacity);
@@ -97,6 +98,21 @@ namespace KamGenetics2020.Model
         }
 
         public EconomyGene GroupEconomy => (EconomyGene)Organisms.FirstOrDefault().GetGeneValueByType(GeneEnum.Economy);
+
+        private List<Organism> _departedOrganisms;
+
+        public List<Organism> DepartedOrganisms
+        {
+           get
+           {
+              if (_departedOrganisms == null)
+              {
+                 _departedOrganisms = new List<Organism>();
+              }
+
+              return _departedOrganisms;
+           }
+        }
 
     }
 }

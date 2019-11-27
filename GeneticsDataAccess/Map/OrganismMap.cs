@@ -15,11 +15,11 @@ namespace GeneticsDataAccess.Map
                 .WithMany()
                 .HasForeignKey(r => r.ParentId);
 
-            //modelBuilder.Entity<Organism>()
-            //    .HasOne(r => r.Group)
-            //    .WithMany()
-            //    .HasForeignKey(r => r.GroupId);
+            modelBuilder.Entity<Organism>()
+                .HasOne(r => r.Group)
+                .WithMany()
+                .HasForeignKey(r => r.GroupId);
 
-        }
+      }
     }
 }
