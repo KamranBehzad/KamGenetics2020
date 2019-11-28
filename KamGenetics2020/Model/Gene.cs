@@ -81,7 +81,7 @@ namespace KamGenetics2020.Model
         /// <summary>
         /// If gene type is GeneEnum.UserDefined then user must provide a description for the gene
         /// </summary>
-        public string TypeDescription { get; set; }
+        public string GeneDescription { get; set; }
 
         public void Mutate()
         {
@@ -126,7 +126,7 @@ namespace KamGenetics2020.Model
                 CurrentValue = CurrentValue,
                 ValueDescription = ValueDescription,
                 GeneType = GeneType,
-                TypeDescription = TypeDescription,
+                GeneDescription = GeneDescription,
                 CanMutate = CanMutate,
                 IsDormant = IsDormant,
                 LastValue = CurrentValue,

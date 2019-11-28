@@ -11,7 +11,7 @@ namespace TestConsole
 {
    class Program
    {
-      const int SimDuration = 100;
+      const int SimDuration = 70;
       private static Simulator _simulator;
       private static World _world;
 

@@ -97,7 +97,8 @@ namespace KamGenetics2020.Model
          return StorageLevel;
       }
 
-      public EconomyGene GroupEconomy => (EconomyGene)Organisms.FirstOrDefault().GetGeneValueByType(GeneEnum.Economy);
+      public double EconomyScore => Organisms.Average(org => (double)org.GetGeneValueByType(GeneEnum.Economy));
+      public double MilitaryScore => Organisms.Average(org => (double)org.GetGeneValueByType(GeneEnum.Military));
 
       private List<Organism> _departedOrganisms;
 

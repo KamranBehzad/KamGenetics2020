@@ -89,8 +89,11 @@ namespace KamGenetics2020.Model
       private void InitGenes()
       {
          Genes.Add(GeneHelper.CreateCooperationGene(RandomHelper.StandardGeneratorInstance.Next(1, 2)));
-         Genes.Add(GeneHelper.CreateEconomyGene());
          Genes.Add(GeneHelper.CreateLibidoGene());
+         
+         Genes.Add(GeneHelper.CreateEconomyGeneVariations());
+         Genes.Add(GeneHelper.CreateMilitaryGeneVariations());
+
       }
 
       [Key]

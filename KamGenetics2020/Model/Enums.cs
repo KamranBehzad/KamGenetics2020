@@ -11,7 +11,8 @@ namespace KamGeneticsLib.Model
       UserDefined,
       Cooperation,
       Economy,
-      Libido
+      Libido,
+      Military
    }
 
    public enum CooperationGene
@@ -24,9 +25,18 @@ namespace KamGeneticsLib.Model
    {
       Worker = 1,     // organism cultivates resources, never steals.
       Survivor = 2,   // will cultivate resources but if none available will steal.
-      Thief = 3,      // steals from others. Will not kill to steal. Will cultivate if nothing found to steal.
-      Murderer = 4,   // steals from others. Kills them if necessary.
+      Thief = 3,      // steals first. Will cultivate (at a lower rate) if nothing found to steal.
+      Fungal = 4, // will put little to no effort in cultivating resources. Will intensely try to join group and feed off the group. 
    }
+
+   public enum MilitaryGene
+   {
+      NonMilitant = 1,     // no attempt to form defensive measures
+      Passive = 2,   // will adopt defensive measures but is always only responsive to attacks
+      Proactive = 3,      // adopts defensive measures plus may attack first if feels threatened by an "Offender" body
+      Offender = 4,   // Will attack without provocation.
+   }
+
 
    public enum LogLevel
    {

@@ -16,7 +16,7 @@ namespace KamGenetics2020.Model
         private const int DefaultTimeIncrement = 1;
 
         // Population constants
-        private const int OrganismCount = 100;
+        private const int InitialOrganismCount = 100;
         private const int MaxPopulationToSupport = 100;
         private const int MinPopulationToSupport = 50;
         private const int MeanOrganismLifetimeConsumption = 100;
@@ -125,7 +125,7 @@ namespace KamGenetics2020.Model
         private void Populate()
         {
             _organisms = new List<Organism>();
-            for (var i = 0; i < OrganismCount; i++)
+            for (var i = 0; i < InitialOrganismCount; i++)
             {
                 var organism = new Organism(this, null);
                 Organisms.Add(organism);
