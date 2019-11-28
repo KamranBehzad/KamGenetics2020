@@ -14,8 +14,8 @@ namespace KamGenetics2020.Helpers
         /// Economy Gene:
         /// 1. Worker - will cultivate resources, never steals.
         /// 2. Survivor - will cultivate resources. If none available might steal.
-        /// 3. Thief - only steals from others.
-        /// 4. Murderer - steals from others and kills them.
+        /// 3. Thief - Steals first. Steals partial resources not all. Cultivates if there is nothing to steal.
+        /// 4. Murderer - steals from others and kills them, taking all resources.
         /// </summary>
         public static Gene CreateEconomyGene(int value = 1)
         {

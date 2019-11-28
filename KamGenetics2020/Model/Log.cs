@@ -27,11 +27,11 @@ namespace KamGenetics2020.Model
       public Organism Organism { get; set; }
       
       public int TimeIdx { get; set; }
+      public string PriorityCode { get; set; }
       public string Description { get; set; }
       public double? Quantity { get; set; }
       public double Storage { get; set; }
       public double Starvation { get; set; }
-      public string PriorityCode { get; set; }
 
 
    }
