@@ -242,6 +242,7 @@ namespace KamGenetics2020.Model
             if (formedGroup)
             {
                AddLogEntry(_logPriorityFormJoinGroup, "Formed new Group", StorageLevel, Starvation, null, LogLevel.MostImportant);
+               similarOrganism.AddLogEntry(_logPriorityFormJoinGroup, "Formed new Group", similarOrganism.StorageLevel, similarOrganism.Starvation, null, LogLevel.MostImportant);
             }
          }
          else if (!IsInGroup && similarOrganism.IsInGroup)
@@ -254,7 +255,7 @@ namespace KamGenetics2020.Model
          {
             // other organism joins us
             Group.Join(similarOrganism);
-            similarOrganism.AddLogEntry(_logPriorityFormJoinGroup, "Invited to Group", StorageLevel, Starvation, Group.Id, LogLevel.MostImportant);
+            similarOrganism.AddLogEntry(_logPriorityFormJoinGroup, "Invited to Group", similarOrganism.StorageLevel, similarOrganism.Starvation, Group.Id, LogLevel.MostImportant);
          }
       }
 

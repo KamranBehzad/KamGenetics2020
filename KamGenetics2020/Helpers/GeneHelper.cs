@@ -9,7 +9,7 @@ namespace KamGenetics2020.Helpers
    {
       // Constants
       private const int MinLibido = 1;
-      private const int MaxLibido = 5;
+      private const int MaxLibido = 10;
 
 
       /// <summary>
