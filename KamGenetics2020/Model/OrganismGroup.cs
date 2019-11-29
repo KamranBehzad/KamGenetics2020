@@ -100,6 +100,25 @@ namespace KamGenetics2020.Model
       public double EconomyScore => Organisms.Average(org => (double)org.GetGeneValueByType(GeneEnum.Economy));
       public double MilitaryScore => Organisms.Average(org => (double)org.GetGeneValueByType(GeneEnum.Military));
 
+      public EconomyGene GroupEconomyGene => GetGroupEconomyGene();
+
+      /// <summary>
+      /// The group gene is dictated by the genes of most of the individuals in the group
+      /// </summary>
+      private EconomyGene GetGroupEconomyGene()
+      {
+         int roundedValue = (int)Math.Round(EconomyScore, 0);
+         return (EconomyGene)roundedValue;
+      }
+
+      public MilitaryGene GroupMilitaryGene => GetGroupMilitaryGene();
+
+      private MilitaryGene GetGroupMilitaryGene()
+      {
+         int roundedValue = (int)Math.Round(MilitaryScore, 0);
+         return (MilitaryGene)roundedValue;
+      }
+
       private List<Organism> _departedOrganisms;
 
       public List<Organism> DepartedOrganisms

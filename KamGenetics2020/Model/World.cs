@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Transactions;
 using KamGenetics2020.Helpers;
 using KamGeneticsLib.Model;
 using KBLib.Helpers;
@@ -313,27 +315,22 @@ namespace KamGenetics2020.Model
 
         /// <summary>
         /// Used when a cooperative organism is searching its vicinity for another cooperative organism that is similar minded.
-        /// Similar minded means they have the same economy gene value (
+        /// Cannot search just vicinity because if there is no one in vicinity then for many iterations this will not change
+        /// Also individuals meet different individuals every iteration in real life. So meetings must be random
         /// </summary>
         public Organism SearchVicinityForSimilarCooperativeIndividuals(Organism organism)
         {
-           int vicinitySearchRadius = 10;
+           int searchCount = MaxPopulationToSupport / 10;
            var curIdx = Organisms.IndexOf(organism);
 
-           int lowerSearchIdx = Math.Max(curIdx - vicinitySearchRadius, 0);
-           int upperSearchIdx = Math.Min(curIdx + vicinitySearchRadius, Population-1);
-           // Search upper
-           for (int i = curIdx+1; i < upperSearchIdx; i++)
+           for (int i = 0; i < searchCount; i++)
            {
-              if (IsGroupMatch(organism, Organisms[i]))
-              {
-                 return Organisms[i];
-              }
-           }
-           // Search lower
-           for (int i = curIdx-1; i > lowerSearchIdx; i--)
-           {
-              if (Organisms[i].GetGeneValueByType(GeneEnum.Economy) == organism.GetGeneValueByType(GeneEnum.Economy))
+              int foundIdx;
+              // find random organism, ignore self
+              do
+                 foundIdx = RandomHelper.StandardGeneratorInstance.Next(0, Population);
+              while (curIdx == foundIdx);
+              if (AreMatched(organism, Organisms[i]))
               {
                  return Organisms[i];
               }
@@ -345,14 +342,171 @@ namespace KamGenetics2020.Model
         /// Checks if current organism and another organism in the vicinity are a good match to form a group.
         /// To be a good match:
         /// 1. The organism in vicinity must also be cooperative and not solo
-        /// 2. Both organisms must have the same economy gene value (worker. thief, etc.)
+        /// 2. Both organisms must have similar/close economy gene value (worker. thief, etc.)
+        /// 3.  Both organisms must have similar/close military gene value (non, passive, etc.)
         /// </summary>
-        private bool IsGroupMatch(Organism curOrganism, Organism organismInVicinity)
+        private bool AreMatched(Organism curOrganism, Organism vicinityOrganism)
         {
-           return
-              organismInVicinity.GetGeneValueByType(GeneEnum.Cooperation) == (int)CooperationGene.Cooperative
-              && organismInVicinity.GetGeneValueByType(GeneEnum.Economy) == curOrganism.GetGeneValueByType(GeneEnum.Economy);
+           if (vicinityOrganism.GetGeneValueByType(GeneEnum.Cooperation) == (int) CooperationGene.Solo)
+           {
+              return false;
+           }
+           //todo decide how group mergers occur
+           // return false if both organisms are already in a group
+           if (curOrganism.IsInGroup && vicinityOrganism.IsInGroup)
+           {
+              return false;
+           }
+
+           var curOrganismEconomyMatchPercentage = GetEconomyMatchPercentage(curOrganism, vicinityOrganism);
+           var vicinityOrganismEconomyMatchPercentage = GetEconomyMatchPercentage(vicinityOrganism, curOrganism);
+           
+           
+           var curOrganismMilitaryMatchPercentage = GetMilitaryMatchPercentage(curOrganism, vicinityOrganism);
+           var vicinityOrganismMilitaryMatchPercentage = GetMilitaryMatchPercentage(vicinityOrganism, curOrganism);
+
+           // todo What is the weight on economy vs military match?
+           // for now lets give equal weight to economy vs military match
+           double economyWeight = 1;
+           double militaryWeight = 1;
+           double sumWeights = economyWeight + militaryWeight;
+
+           double curOrganismAcceptancePercentage = (economyWeight * curOrganismEconomyMatchPercentage + militaryWeight * curOrganismMilitaryMatchPercentage) / (sumWeights * 100);
+           double vicinityOrganismAcceptancePercentage = (economyWeight * vicinityOrganismEconomyMatchPercentage + militaryWeight * vicinityOrganismMilitaryMatchPercentage) / (sumWeights * 100);
+           // Both parties must accept one another for the join to happen
+           bool curOrganismAccepts = RandomHelper.StandardGeneratorInstance.NextDouble() < curOrganismAcceptancePercentage;
+           bool vicinityOrganismAccepts = RandomHelper.StandardGeneratorInstance.NextDouble() < vicinityOrganismAcceptancePercentage;
+           return curOrganismAccepts && vicinityOrganismAccepts;
         }
 
-   }
+        /// <summary>
+        /// Economy Match Score = 0-100
+        /// Fungal types will join anyone.
+        /// Workers and survivors will join each other. Higher rate if both organisms are identical
+        /// Thieves only join thieves.
+        /// All non-fungals may still accept to join fungals because of the strength in numbers. More so in case of thieves since they are stealing
+        /// any way and greater numbers works better and hardly much resources are lost to fungals.
+        /// </summary>
+        private double GetEconomyMatchPercentage(Organism curOrganism, Organism vicinityOrganism)
+        {
+           EconomyGene currentOrganismEconomy = curOrganism.IsInGroup
+              ? curOrganism.Group.GroupEconomyGene
+              : (EconomyGene) curOrganism.GetGeneValueByType(GeneEnum.Economy);
+           EconomyGene vicinityOrganismEconomy = vicinityOrganism.IsInGroup
+              ? vicinityOrganism.Group.GroupEconomyGene
+              : (EconomyGene) vicinityOrganism.GetGeneValueByType(GeneEnum.Economy);
+           switch (currentOrganismEconomy)
+           {
+              default:
+                 return 0;
+              case EconomyGene.Fungal:
+                 // Fungal types always want to join 
+                 return 100;
+              case EconomyGene.Worker:
+                 switch (vicinityOrganismEconomy)
+                 {
+                    default:
+                       return 0;
+                    case  EconomyGene.Fungal:
+                       return 10;
+                    case  EconomyGene.Worker:
+                       return 100;
+                    case  EconomyGene.Survivor:
+                       return 50;
+                 }
+              case EconomyGene.Survivor:
+                 switch (vicinityOrganismEconomy)
+                 {
+                    default:
+                       return 0;
+                    case  EconomyGene.Fungal:
+                       return 10;
+                    case  EconomyGene.Worker:
+                       return 50;
+                    case  EconomyGene.Survivor:
+                       return 100;
+                 }
+              case EconomyGene.Thief:
+                 switch (vicinityOrganismEconomy)
+                 {
+                    default:
+                       return 0;
+                    case  EconomyGene.Fungal:
+                       return 30;
+                    case  EconomyGene.Thief:
+                       return 100;
+                 }
+           }
+        }
+
+        /// <summary>
+        /// Military Match Score = 0-100
+        /// NonMilitants and passives will join anyone but offenders.
+        /// Actives will join anyone.
+        /// Actives and offenders join one of their own kind and a small chance to join one another.
+        /// For actives and passives, there is a higher chance to accept someone less offensive than yourself than more offensive.
+        /// </summary>
+        private double GetMilitaryMatchPercentage(Organism curOrganism, Organism vicinityOrganism)
+        {
+           var currentOrganismMilitary = curOrganism.IsInGroup
+              ? curOrganism.Group.GroupMilitaryGene
+              : (MilitaryGene)curOrganism.GetGeneValueByType(GeneEnum.Military);
+           var vicinityOrganismMilitary = vicinityOrganism.IsInGroup
+              ? vicinityOrganism.Group.GroupMilitaryGene
+              :(MilitaryGene)vicinityOrganism.GetGeneValueByType(GeneEnum.Military);
+           switch (currentOrganismMilitary)
+           {
+              default:
+                 return 0;
+              case MilitaryGene.NonMilitant:
+                 switch (vicinityOrganismMilitary)
+                 {
+                    default:
+                       return 0;
+                    case MilitaryGene.NonMilitant:
+                       return 100;
+                    case MilitaryGene.Passive:
+                       return 50;
+                    case MilitaryGene.Proactive:
+                       return 10;
+                 }
+              case MilitaryGene.Passive:
+                 switch (vicinityOrganismMilitary)
+                 {
+                    default:
+                       return 0;
+                    case MilitaryGene.NonMilitant:
+                       return 90;
+                    case MilitaryGene.Passive:
+                       return 100;
+                    case MilitaryGene.Proactive:
+                       return 50;
+                 }
+              case MilitaryGene.Proactive:
+                 switch (vicinityOrganismMilitary)
+                 {
+                    default:
+                       return 0;
+                    case MilitaryGene.NonMilitant:
+                       return 80;
+                    case MilitaryGene.Passive:
+                       return 90;
+                    case MilitaryGene.Proactive:
+                       return 100;
+                    case MilitaryGene.Offender:
+                       return 20;
+                 }
+              case MilitaryGene.Offender:
+                 switch (vicinityOrganismMilitary)
+                 {
+                    default:
+                       return 0;
+                    case MilitaryGene.Proactive:
+                       return 90;
+                    case MilitaryGene.Offender:
+                       return 100;
+                 }
+           }
+        }
+    }
 }

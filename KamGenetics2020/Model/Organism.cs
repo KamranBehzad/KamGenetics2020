@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using KamGenetics2020.Helpers;
 using KamGeneticsLib.Model;
 using KBLib.Helpers;
@@ -28,7 +29,6 @@ namespace KamGenetics2020.Model
       private const double InitialStorageLevel = 1;
 
       // Log constants
-      private string _logPriority1 = "0001";
       private string _logPriorityIsBorn = "0010";
       private string _logPriorityFormJoinGroup = "0100";
       private string _logPriorityFoundResource = "0200";
@@ -219,17 +219,12 @@ namespace KamGenetics2020.Model
       /// </summary>
       private void JoinGroup()
       {
-         // Ignore if already in group
-         if (Group != null)
-         {
-            return;
-         }
          // Ignore if not inclined to join groups
          if (GetGeneValueByType(GeneEnum.Cooperation) == (int)CooperationGene.Solo)
          {
             return;
          }
-         // Is cooperative and not already part of a group, so will look to join or form a group
+         // Organism is cooperative and not already part of a group, so will look to join or form a group
          // Will search for a like-minded individual in its vicinity.
          // If other individual is in a group then will join that group.
          // If other individual is not in a group then both will form a new group.
@@ -238,21 +233,37 @@ namespace KamGenetics2020.Model
          {
             return;
          }
-
-         if (similarOrganism.Group != null)
+         // Both cannot be in a group but one or none can be in a group. So 3 cases to cover
+         if (!IsInGroup && !similarOrganism.IsInGroup)
          {
-            similarOrganism.Group.Join(this);
-            AddLogEntry(_logPriorityFormJoinGroup,"Joined Group", StorageLevel, Starvation, Group.Id, LogLevel.MostImportant);
-         }
-         else
-         {
+            // None are in a group. Form a new group.
             // Need to form a new group comprising of the two organisms
-            OrganismGroup newGroup = new OrganismGroup(World, this, similarOrganism);
-            World.AddGroup(newGroup);
-            AddLogEntry(_logPriorityFormJoinGroup,"Formed new Group", StorageLevel, Starvation, null, LogLevel.MostImportant);
+            bool formedGroup = FormGroup(similarOrganism);
+            if (formedGroup)
+            {
+               AddLogEntry(_logPriorityFormJoinGroup, "Formed new Group", StorageLevel, Starvation, null, LogLevel.MostImportant);
+            }
+         }
+         else if (!IsInGroup && similarOrganism.IsInGroup)
+         {
+            // we join the other group
+            similarOrganism.Group.Join(this);
+            AddLogEntry(_logPriorityFormJoinGroup, "Joined Group", StorageLevel, Starvation, Group.Id, LogLevel.MostImportant);
+         }
+         else if (IsInGroup && !similarOrganism.IsInGroup)
+         {
+            // other organism joins us
+            Group.Join(similarOrganism);
+            similarOrganism.AddLogEntry(_logPriorityFormJoinGroup, "Invited to Group", StorageLevel, Starvation, Group.Id, LogLevel.MostImportant);
          }
       }
 
+      private bool FormGroup(Organism similarOrganism)
+      {
+         OrganismGroup newGroup = new OrganismGroup(World, this, similarOrganism);
+         World.AddGroup(newGroup);
+         return true;
+      }
 
       public void ProcreateAsexual()
       {

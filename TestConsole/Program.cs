@@ -11,7 +11,7 @@ namespace TestConsole
 {
    class Program
    {
-      const int SimDuration = 70;
+      const int SimDuration = 200;
       private static Simulator _simulator;
       private static World _world;
 
@@ -170,8 +170,9 @@ namespace TestConsole
          //         Console.WriteLine("Performing periodic persist ...");
          //#endif
          var dbUpdateInterval = 100;
-         if (World.TimeIdx % dbUpdateInterval == 0
-             || World.TimeIdx >= Simulator.FinishTimeIndex)
+         if (World.TimeIdx > 0 
+             && (World.TimeIdx % dbUpdateInterval == 0
+             || World.TimeIdx >= Simulator.FinishTimeIndex))
          {
             SaveDbChanges();
          }
