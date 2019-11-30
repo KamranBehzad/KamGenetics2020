@@ -16,10 +16,10 @@ namespace KamGenetics2020.Model
    public class Organism
    {
       // Age constants
-      private const int MaxAge = 82;
+      private const int MaxAge = 80;
       private const int MaturityStart = 15;
-      private const int MaturityFinish = 70;
-      private const double DeathByAccidentPercentage = 0.01;
+      private const int MaturityFinish = 65;
+      private const double DeathByAccidentPercentage = 0.02;
 
       // Breeding constants
 

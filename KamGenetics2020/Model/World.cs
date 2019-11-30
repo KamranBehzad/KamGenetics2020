@@ -16,13 +16,55 @@ namespace KamGenetics2020.Model
       private const int DefaultTimeIncrement = 1;
 
       // Population constants
-      private const int InitialOrganismCount = 1000;
-      private const int MaxPopulationToSupport = 1000;
-      private const int MinPopulationToSupport = 200;
-      private const int MeanOrganismLifetimeConsumption = 100;
+      private const int GeneralMultiplier = 10;
+      private const int InitialOrganismCount = 100 * GeneralMultiplier;
+      private const int MaxPopulationToSupport = 100 * GeneralMultiplier;
+      private const int MinPopulationToSupport = 100;
+      private const int ExpectedOrganismLifetimeConsumption = 80;
 
       // Resource constants
       private const double DefaultMaxResourceLevel = double.MaxValue;
+
+      // Group join constants
+      // Economy Group Join
+      private const int EjFungal = 100;
+      
+      private const int EjWorkerWorker = 100;
+      private const int EjWorkerSurvivor = 50;
+      private const int EjWorkerThief = 0;
+      private const int EjWorkerFungal = 10;
+
+      private const int EjSurvivorWorker = 50;
+      private const int EjSurvivorSurvivor = 100;
+      private const int EjSurvivorThief = 0;
+      private const int EjSurvivorFungal = 10;
+      
+      
+      private const int EjThiefWorker = 0;
+      private const int EjThiefSurvivor = 0;
+      private const int EjThiefThief = 100;
+      private const int EjThiefFungal = 30;
+
+      // Military Group Join
+      private const int MjNonNon = 100;
+      private const int MjNonPassive = 50;
+      private const int MjNonActive = 10;
+      private const int MjNonOffensive = 0;
+
+      private const int MjPassiveNon = 90;
+      private const int MjPassivePassive = 100;
+      private const int MjPassiveActive = 50;
+      private const int MjPassiveOffensive = 0;
+
+      private const int MjActiveNon = 80;
+      private const int MjActivePassive = 90;
+      private const int MjActiveActive = 100;
+      private const int MjActiveOffensive = 10;
+
+      private const int MjOffensiveNon = 0;
+      private const int MjOffensivePassive = 0;
+      private const int MjOffensiveActive = 20;
+      private const int MjOffensiveOffensive = 100;
 
 
       public World()
@@ -35,7 +77,7 @@ namespace KamGenetics2020.Model
       private void InitResourceLevel()
       {
          MaxResourceLevel = DefaultMaxResourceLevel;
-         ResourceLevel = MaxPopulationToSupport * MeanOrganismLifetimeConsumption;
+         ResourceLevel = MaxPopulationToSupport * ExpectedOrganismLifetimeConsumption;
       }
 
       private List<Organism> _organisms;
@@ -403,18 +445,18 @@ namespace KamGenetics2020.Model
                return 0;
             case EconomyGene.Fungal:
                // Fungal types always want to join 
-               return 100;
+               return EjFungal;
             case EconomyGene.Worker:
                switch (vicinityOrganismEconomy)
                {
                   default:
                      return 0;
                   case EconomyGene.Fungal:
-                     return 10;
+                     return EjWorkerFungal;
                   case EconomyGene.Worker:
-                     return 100;
+                     return EjWorkerWorker;
                   case EconomyGene.Survivor:
-                     return 50;
+                     return EjWorkerSurvivor;
                }
             case EconomyGene.Survivor:
                switch (vicinityOrganismEconomy)
@@ -422,11 +464,11 @@ namespace KamGenetics2020.Model
                   default:
                      return 0;
                   case EconomyGene.Fungal:
-                     return 10;
+                     return EjSurvivorFungal;
                   case EconomyGene.Worker:
-                     return 50;
+                     return EjSurvivorWorker;
                   case EconomyGene.Survivor:
-                     return 100;
+                     return EjSurvivorSurvivor;
                }
             case EconomyGene.Thief:
                switch (vicinityOrganismEconomy)
@@ -434,9 +476,9 @@ namespace KamGenetics2020.Model
                   default:
                      return 0;
                   case EconomyGene.Fungal:
-                     return 30;
+                     return EjThiefFungal;
                   case EconomyGene.Thief:
-                     return 100;
+                     return EjThiefThief;
                }
          }
       }
@@ -466,11 +508,11 @@ namespace KamGenetics2020.Model
                   default:
                      return 0;
                   case MilitaryGene.NonMilitant:
-                     return 100;
+                     return MjNonNon;
                   case MilitaryGene.Passive:
-                     return 50;
+                     return MjNonPassive;
                   case MilitaryGene.Proactive:
-                     return 10;
+                     return MjNonActive;
                }
             case MilitaryGene.Passive:
                switch (vicinityOrganismMilitary)
@@ -478,11 +520,11 @@ namespace KamGenetics2020.Model
                   default:
                      return 0;
                   case MilitaryGene.NonMilitant:
-                     return 90;
+                     return MjPassiveNon;
                   case MilitaryGene.Passive:
-                     return 100;
+                     return MjPassivePassive;
                   case MilitaryGene.Proactive:
-                     return 50;
+                     return MjPassiveActive;
                }
             case MilitaryGene.Proactive:
                switch (vicinityOrganismMilitary)
@@ -490,13 +532,13 @@ namespace KamGenetics2020.Model
                   default:
                      return 0;
                   case MilitaryGene.NonMilitant:
-                     return 80;
+                     return MjActiveNon;
                   case MilitaryGene.Passive:
-                     return 90;
+                     return MjActivePassive;
                   case MilitaryGene.Proactive:
-                     return 100;
+                     return MjActiveActive;
                   case MilitaryGene.Offender:
-                     return 20;
+                     return MjActiveOffensive;
                }
             case MilitaryGene.Offender:
                switch (vicinityOrganismMilitary)
@@ -504,9 +546,9 @@ namespace KamGenetics2020.Model
                   default:
                      return 0;
                   case MilitaryGene.Proactive:
-                     return 90;
+                     return MjOffensiveActive;
                   case MilitaryGene.Offender:
-                     return 100;
+                     return MjOffensiveOffensive;
                }
          }
       }

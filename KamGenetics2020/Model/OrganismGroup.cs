@@ -61,6 +61,8 @@ namespace KamGenetics2020.Model
          organism.GroupId = Id;
          StorageCapacity += organism.StorageCapacity;
          StorageLevel += organism.StorageLevel;
+         EconomyScore = GetEconomyScore();
+         MilitaryScore = GetMilitaryScore();
          return this;
       }
 
@@ -97,8 +99,19 @@ namespace KamGenetics2020.Model
          return StorageLevel;
       }
 
-      public double EconomyScore => Organisms.Average(org => (double)org.GetGeneValueByType(GeneEnum.Economy));
-      public double MilitaryScore => Organisms.Average(org => (double)org.GetGeneValueByType(GeneEnum.Military));
+      public double EconomyScore { get; set; }
+
+      private double GetEconomyScore()
+      {
+         return Organisms.Average(org => (double)org.GetGeneValueByType(GeneEnum.Economy));
+      }
+
+      public double MilitaryScore { get; set; }
+
+      private double GetMilitaryScore()
+      {
+         return Organisms.Average(org => (double)org.GetGeneValueByType(GeneEnum.Military));
+      }
 
       public EconomyGene GroupEconomyGene => GetGroupEconomyGene();
 
