@@ -147,5 +147,14 @@ namespace KamGenetics2020.Model
          }
       }
 
+      /// <summary>
+      /// How a group lives in one year
+      /// Only action for now is if group will attack another group or not
+      /// </summary>
+      public void Live()
+      {
+         
+
+      }
    }
 }

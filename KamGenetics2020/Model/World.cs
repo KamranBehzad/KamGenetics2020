@@ -16,7 +16,7 @@ namespace KamGenetics2020.Model
       private const int DefaultTimeIncrement = 1;
 
       // Population constants
-      private const int GeneralMultiplier = 10;
+      private const int GeneralMultiplier = 2;
       private const int InitialOrganismCount = 100 * GeneralMultiplier;
       private const int MaxPopulationToSupport = 100 * GeneralMultiplier;
       private const int MinPopulationToSupport = 100;
@@ -26,7 +26,7 @@ namespace KamGenetics2020.Model
       private const double DefaultMaxResourceLevel = double.MaxValue;
 
       // Group join constants
-      // Economy Group Join
+      // Economy Group Join: Economy-based probability for organism in category 1 to accept joining category 2.
       private const int EjFungal = 100;
       
       private const int EjWorkerWorker = 100;
@@ -45,7 +45,7 @@ namespace KamGenetics2020.Model
       private const int EjThiefThief = 100;
       private const int EjThiefFungal = 30;
 
-      // Military Group Join
+      // Military Group Join: Military-based probability for organism in category 1 to accept joining category 2.
       private const int MjNonNon = 100;
       private const int MjNonPassive = 50;
       private const int MjNonActive = 10;
@@ -66,6 +66,8 @@ namespace KamGenetics2020.Model
       private const int MjOffensiveActive = 20;
       private const int MjOffensiveOffensive = 100;
 
+      // Stealing constants
+      private const int BaseStealingModifier = 30;
 
       public World()
       {
@@ -185,8 +187,14 @@ namespace KamGenetics2020.Model
             MeanLibido = CalculateMeanLibido()
          };
          // Run world events
+         // Run organism events
+         foreach (var group in Groups)
+         {
+            group.Live();
+         }
+         //todo RemoveTheDead?();
+         // Run organism events
          foreach (var organism in Organisms)
-
          {
             organism.Live();
          }
@@ -551,6 +559,69 @@ namespace KamGenetics2020.Model
                      return MjOffensiveOffensive;
                }
          }
+      }
+
+      public double OrganismStealsFood(Organism organism, double availableStorageCapacity, int killProbability)
+      {
+         Organism victim = null;
+         int searchCount = MaxPopulationToSupport / 10;
+         var curIdx = Organisms.IndexOf(organism);
+
+         bool killsVictim = false;
+         for (int i = 0; i < searchCount; i++)
+         {
+            int foundIdx;
+            // find random organism, ignore self
+            do
+               foundIdx = RandomHelper.StandardGeneratorInstance.Next(0, Population);
+            while (curIdx == foundIdx);
+            if (CanSteal(organism, Organisms[i], killProbability, out killsVictim))
+            {
+               victim = Organisms[i];
+               break;
+            }
+         }
+
+         if (victim == null)
+         {
+            return 0;
+         }
+         // Steal from found victim
+         // How much is stolen?
+         // Let's assume 50% of victim's inventory is stolen. If the victim is killed then 100% of the inventory is stolen.
+         double stolenAmount = killsVictim ? victim.StorageLevel : victim.StorageLevel / 2;
+         stolenAmount = Math.Min(stolenAmount, availableStorageCapacity);
+         if (killsVictim)
+         {
+            victim.Die("Killed");
+         }
+         else
+         {
+            victim.DecreaseStorageLevel(stolenAmount, "Stolen");
+         }
+         return stolenAmount;
+      }
+
+      private bool CanSteal(Organism thief, Organism victim, int killProbability, out bool killsVictim)
+      {
+         killsVictim = false;
+         // The success of the steal depends on individual military preparedness plus chance
+         var baseSuccessPercentage = Math.Max(0, thief.MilitaryPower - victim.MilitaryPower + BaseStealingModifier);
+         // Add any bonus if willing to kill
+         var killSuccessPercentage = baseSuccessPercentage + killProbability;
+         // Randomly determine if victim was killed, robbed or none
+         var rand = 100 * RandomHelper.StandardGeneratorInstance.NextDouble();
+         if (rand < baseSuccessPercentage)
+         {
+            return true;
+         }
+         if (rand < killSuccessPercentage)
+         {
+            killsVictim = true;
+            return true;
+         }
+         // todo: should we allow for possibility that victim is killed but the robbery is still unsuccessful? Can happen in real life!
+         return false;
       }
    }
 }
