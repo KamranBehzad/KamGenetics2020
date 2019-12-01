@@ -378,7 +378,7 @@ namespace KamGenetics2020.Model
             do
                foundIdx = RandomHelper.StandardGeneratorInstance.Next(0, Population);
             while (curIdx == foundIdx);
-            if (AreMatched(organism, Organisms[i]))
+            if (AreMatched(organism, Organisms[foundIdx]))
             {
                return Organisms[i];
             }
@@ -575,7 +575,7 @@ namespace KamGenetics2020.Model
             do
                foundIdx = RandomHelper.StandardGeneratorInstance.Next(0, Population);
             while (curIdx == foundIdx);
-            if (CanSteal(organism, Organisms[i], killProbability, out killsVictim))
+            if (CanSteal(organism, Organisms[foundIdx], killProbability, out killsVictim))
             {
                victim = Organisms[i];
                break;

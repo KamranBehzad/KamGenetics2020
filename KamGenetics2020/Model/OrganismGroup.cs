@@ -111,14 +111,18 @@ namespace KamGenetics2020.Model
 
       private double GetEconomyScore()
       {
-         return Organisms.Average(org => (double)org.GetGeneValueByType(GeneEnum.Economy));
+         return Population == 0 
+            ? 0
+            : Organisms.Average(org => (double)org.GetGeneValueByType(GeneEnum.Economy));
       }
 
       public double MilitaryScore { get; set; }
 
       private double GetMilitaryScore()
       {
-         return Organisms.Average(org => (double)org.GetGeneValueByType(GeneEnum.Military));
+         return Population == 0 
+            ? 0
+            : Organisms.Average(org => (double)org.GetGeneValueByType(GeneEnum.Military));
       }
 
       public EconomyGene GroupEconomyGene => GetGroupEconomyGene();
