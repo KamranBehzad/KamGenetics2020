@@ -16,10 +16,10 @@ namespace KamGenetics2020.Model
       private const int DefaultTimeIncrement = 1;
 
       // Population constants
-      private const int GeneralMultiplier = 2;
-      private const int InitialOrganismCount = 100 * GeneralMultiplier;
+      private const int GeneralMultiplier = 50;
+      private const int InitialOrganismCount = 10 * GeneralMultiplier;
       private const int MaxPopulationToSupport = 100 * GeneralMultiplier;
-      private const int MinPopulationToSupport = 100;
+      private const int MinPopulationToSupport = 500;
       private const int ExpectedOrganismLifetimeConsumption = 80;
 
       // Resource constants
@@ -30,34 +30,34 @@ namespace KamGenetics2020.Model
       private const int EjFungal = 100;
       
       private const int EjWorkerWorker = 100;
-      private const int EjWorkerSurvivor = 50;
+      private const int EjWorkerSurvivor = 20;
       private const int EjWorkerThief = 0;
-      private const int EjWorkerFungal = 10;
+      private const int EjWorkerFungal = 5;
 
-      private const int EjSurvivorWorker = 50;
+      private const int EjSurvivorWorker = 20;
       private const int EjSurvivorSurvivor = 100;
       private const int EjSurvivorThief = 0;
-      private const int EjSurvivorFungal = 10;
+      private const int EjSurvivorFungal = 5;
       
       
       private const int EjThiefWorker = 0;
       private const int EjThiefSurvivor = 0;
       private const int EjThiefThief = 100;
-      private const int EjThiefFungal = 30;
+      private const int EjThiefFungal = 20;
 
       // Military Group Join: Military-based probability for organism in category 1 to accept joining category 2.
       private const int MjNonNon = 100;
       private const int MjNonPassive = 50;
-      private const int MjNonActive = 10;
+      private const int MjNonActive = 5;
       private const int MjNonOffensive = 0;
 
       private const int MjPassiveNon = 90;
       private const int MjPassivePassive = 100;
-      private const int MjPassiveActive = 50;
+      private const int MjPassiveActive = 10;
       private const int MjPassiveOffensive = 0;
 
-      private const int MjActiveNon = 80;
-      private const int MjActivePassive = 90;
+      private const int MjActiveNon = 70;
+      private const int MjActivePassive = 80;
       private const int MjActiveActive = 100;
       private const int MjActiveOffensive = 10;
 
@@ -561,7 +561,7 @@ namespace KamGenetics2020.Model
          }
       }
 
-      public double OrganismStealsFood(Organism organism, double availableStorageCapacity, int killProbability)
+      public double OrganismStealsFood(Organism organism, int killProbability)
       {
          Organism victim = null;
          int searchCount = MaxPopulationToSupport / 10;
@@ -590,7 +590,6 @@ namespace KamGenetics2020.Model
          // How much is stolen?
          // Let's assume 50% of victim's inventory is stolen. If the victim is killed then 100% of the inventory is stolen.
          double stolenAmount = killsVictim ? victim.StorageLevel : victim.StorageLevel / 2;
-         stolenAmount = Math.Min(stolenAmount, availableStorageCapacity);
          if (killsVictim)
          {
             victim.Die("Killed");
@@ -605,6 +604,11 @@ namespace KamGenetics2020.Model
       private bool CanSteal(Organism thief, Organism victim, int killProbability, out bool killsVictim)
       {
          killsVictim = false;
+         // Cannot steal if not mature yet
+         if (!thief.IsMatureToSteal)
+         {
+            return false;
+         }
          // The success of the steal depends on individual military preparedness plus chance
          var baseSuccessPercentage = Math.Max(0, thief.MilitaryPower - victim.MilitaryPower + BaseStealingModifier);
          // Add any bonus if willing to kill

@@ -12,6 +12,12 @@ namespace KamGenetics2020.Model
    [DebuggerDisplay("Id:{Id} Pop:{Population}")]
    public class OrganismGroup
    {
+      // Log constants
+      private const string LogPriorityIsFormed = "10010";
+      private const string LogPriorityLive = "10020";
+
+      private LogLevel GroupLogLevel = LogLevel.All;
+
       public OrganismGroup()
       {
       }
@@ -74,6 +80,8 @@ namespace KamGenetics2020.Model
          // A member is gone. Capacity is diminished. Ensure actual level does not exceed capacity.
          //StorageCapacity -= organism.StorageCapacity;
          //StorageLevel = Math.Min(StorageLevel, StorageCapacity);
+         EconomyScore = GetEconomyScore();
+         MilitaryScore = GetMilitaryScore();
          return this;
       }
 
@@ -153,8 +161,37 @@ namespace KamGenetics2020.Model
       /// </summary>
       public void Live()
       {
-         
-
+         AddLogEntry(LogPriorityLive, "Population", StorageLevel, Population, LogLevel.EveryInterval);
+         AddLogEntry(LogPriorityLive, "Economy", StorageLevel, EconomyScore, LogLevel.EveryInterval);
+         AddLogEntry(LogPriorityLive, "Military", StorageLevel, MilitaryScore, LogLevel.EveryInterval);
       }
+
+      private List<LogGroup> _logBook;
+
+      //[NotMapped]
+      public List<LogGroup> LogBook
+      {
+         get
+         {
+            if (_logBook == null)
+            {
+               _logBook = new List<LogGroup>();
+            }
+
+            return _logBook;
+         }
+      }
+
+      public void AddLogEntry(string priority, string text, double storage, double? qty = null, LogLevel level = LogLevel.All)
+      {
+         var logApproval = (int)level & (int)GroupLogLevel;
+         if (logApproval > 0)
+         {
+            LogBook.Add(new LogGroup(priority, text, storage, qty, TimeIdx));
+         }
+      }
+
+      public int TimeIdx => World.TimeIdx;
+
    }
 }

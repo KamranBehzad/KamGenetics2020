@@ -6,12 +6,12 @@ using System.Xml;
 
 namespace KamGenetics2020.Model
 {
-   public class Log
+   public class LogOrganism
    {
-      public Log()
+      public LogOrganism()
       { }
 
-      public Log(string priority, string description, double storage, double starvation, double? quantity, int timeIdx)
+      public LogOrganism(string priority, string description, double storage, double starvation, double? quantity, int timeIdx)
       {
          PriorityCode = priority;
          Description = description;
