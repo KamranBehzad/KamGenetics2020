@@ -14,6 +14,8 @@ namespace KamGenetics2020.Model
    [DebuggerDisplay("Id:{Id} Group:{GroupId}")]
    public class Organism
    {
+      protected LogLevel OrgLogLevel = LogLevel.None;
+
       // Age constants
       private const int MaxAge = 80;
       private const int MaturityStartSexual = 15;
@@ -61,9 +63,6 @@ namespace KamGenetics2020.Model
       private const double MtPassiveMinAge = 15;
       private const double MtActiveMinAge = 10;
       private const double MtOffensiveMinAge = 5;
-
-
-      protected LogLevel OrgLogLevel = LogLevel.All;
 
       public Organism()
       {
@@ -351,6 +350,12 @@ namespace KamGenetics2020.Model
 
       public void Live()
       {
+         ThisPeriodStats = new OrganismStat()
+         {
+            TimeIdx = TimeIdx,
+            PeriodStartResourceLevel = StorageLevel,
+         };
+
          // Might already be dead because it was killed this period
          if (IsDead)
          {
@@ -368,6 +373,7 @@ namespace KamGenetics2020.Model
          ConsumeResources();
          ProcreateAsexual();
          MilitaryTraining();
+         PeriodStats.Add(ThisPeriodStats);
       }
 
       /// <summary>
@@ -456,7 +462,7 @@ namespace KamGenetics2020.Model
 
       private bool FormGroup(Organism similarOrganism)
       {
-         OrganismGroup newGroup = new OrganismGroup(World, this, similarOrganism);
+         Group newGroup = new Group(World, this, similarOrganism);
          World.AddGroup(newGroup);
          return true;
       }
@@ -538,7 +544,7 @@ namespace KamGenetics2020.Model
 
       public int? GroupId { get; set; }
 
-      public OrganismGroup Group { get; set; }
+      public Group Group { get; set; }
 
       public double StorageCapacity => DefaultStorageCapacity;
 
@@ -586,6 +592,24 @@ namespace KamGenetics2020.Model
       }
 
       public double MilitaryPower { get; set; }
+
       public bool IsMatureToSteal => Age >= MaturityStartStealing;
+      
+      private OrganismStat ThisPeriodStats { get; set; }
+      private List<OrganismStat> _periodStats;
+
+      public List<OrganismStat> PeriodStats
+      {
+         get
+         {
+            if (_periodStats == null)
+            {
+               _periodStats = new List<OrganismStat>();
+            }
+
+            return _periodStats;
+         }
+      }
+
    }
 }

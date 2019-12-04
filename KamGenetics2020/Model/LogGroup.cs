@@ -19,7 +19,7 @@ namespace KamGenetics2020.Model
       [Key] public int Id { get; set; }
 
 
-      public OrganismGroup Group { get; set; }
+      public Group Group { get; set; }
 
       public int TimeIdx { get; set; }
       public string PriorityCode { get; set; }

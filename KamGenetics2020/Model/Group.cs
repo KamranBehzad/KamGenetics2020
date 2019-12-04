@@ -10,19 +10,19 @@ namespace KamGenetics2020.Model
 {
    [Serializable]
    [DebuggerDisplay("Id:{Id} Pop:{Population}")]
-   public class OrganismGroup
+   public class Group
    {
+      private LogLevel GroupLogLevel = LogLevel.All;
+
       // Log constants
       private const string LogPriorityIsFormed = "10010";
       private const string LogPriorityLive = "10020";
 
-      private LogLevel GroupLogLevel = LogLevel.All;
-
-      public OrganismGroup()
+      public Group()
       {
       }
 
-      public OrganismGroup(World world, Organism organism1, Organism organism2) : this()
+      public Group(World world, Organism organism1, Organism organism2) : this()
       {
          World = world;
          Join(organism1);
@@ -60,7 +60,7 @@ namespace KamGenetics2020.Model
       public double OrganismResourceShare => Population > 0 ? StorageLevel / Population : 0;
       public double AvailableStorageCapacity => StorageCapacity - StorageLevel;
 
-      public OrganismGroup Join(Organism organism)
+      public Group Join(Organism organism)
       {
          Organisms.Add(organism);
          organism.Group = this;
@@ -72,7 +72,7 @@ namespace KamGenetics2020.Model
          return this;
       }
 
-      public OrganismGroup Remove(Organism organism)
+      public Group Remove(Organism organism)
       {
          // we do not physically remove the organism from the group for record keeping purposes
          DepartedOrganisms.Add(organism);
@@ -165,9 +165,19 @@ namespace KamGenetics2020.Model
       /// </summary>
       public void Live()
       {
+         ThisPeriodStats = new GroupStat()
+         {
+            TimeIdx = TimeIdx,
+            PeriodStartResourceLevel = StorageLevel,
+            EconomyScore = EconomyScore,
+            MilitaryScore = MilitaryScore,
+         };
+
          AddLogEntry(LogPriorityLive, "Population", StorageLevel, Population, LogLevel.EveryInterval);
          AddLogEntry(LogPriorityLive, "Economy", StorageLevel, EconomyScore, LogLevel.EveryInterval);
          AddLogEntry(LogPriorityLive, "Military", StorageLevel, MilitaryScore, LogLevel.EveryInterval);
+
+         PeriodStats.Add(ThisPeriodStats);
       }
 
       private List<LogGroup> _logBook;
@@ -197,5 +207,20 @@ namespace KamGenetics2020.Model
 
       public int TimeIdx => World.TimeIdx;
 
+      private GroupStat ThisPeriodStats { get; set; }
+      private List<GroupStat> _periodStats;
+
+      public List<GroupStat> PeriodStats
+      {
+         get
+         {
+            if (_periodStats == null)
+            {
+               _periodStats = new List<GroupStat>();
+            }
+
+            return _periodStats;
+         }
+      }
    }
 }

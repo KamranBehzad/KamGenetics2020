@@ -16,10 +16,10 @@ namespace KamGenetics2020.Model
       private const int DefaultTimeIncrement = 1;
 
       // Population constants
-      private const int GeneralMultiplier = 50;
-      private const int InitialOrganismCount = 10 * GeneralMultiplier;
+      private const int GeneralMultiplier = 10;
+      private const int InitialOrganismCount = 100 * GeneralMultiplier;
       private const int MaxPopulationToSupport = 100 * GeneralMultiplier;
-      private const int MinPopulationToSupport = 500;
+      private const int MinPopulationToSupport = 100;
       private const int ExpectedOrganismLifetimeConsumption = 80;
 
       // Resource constants
@@ -83,7 +83,7 @@ namespace KamGenetics2020.Model
       }
 
       private List<Organism> _organisms;
-      private List<OrganismGroup> _groups;
+      private List<Group> _groups;
 
       private List<Organism> Organisms
       {
@@ -98,13 +98,13 @@ namespace KamGenetics2020.Model
          }
       }
 
-      private List<OrganismGroup> Groups
+      private List<Group> Groups
       {
          get
          {
             if (_groups == null)
             {
-               _groups = new List<OrganismGroup>();
+               _groups = new List<Group>();
             }
 
             return _groups;
@@ -209,6 +209,10 @@ namespace KamGenetics2020.Model
 
       private double CalculateMeanLibido()
       {
+         if (Population == 0)
+         {
+            return 0;
+         }
          return Organisms.Average(o => o.GetGeneByType(GeneEnum.Libido).CurrentValue);
       }
 
@@ -244,7 +248,7 @@ namespace KamGenetics2020.Model
          Babies.Add(baby);
       }
 
-      public void AddGroup(OrganismGroup group)
+      public void AddGroup(Group group)
       {
          Groups.Add(group);
       }
@@ -368,6 +372,10 @@ namespace KamGenetics2020.Model
       /// </summary>
       public Organism SearchVicinityForSimilarCooperativeIndividuals(Organism organism)
       {
+         if (Population < 2)
+         {
+            return null;
+         }
          int searchCount = MaxPopulationToSupport / 10;
          var curIdx = Organisms.IndexOf(organism);
 
@@ -380,7 +388,7 @@ namespace KamGenetics2020.Model
             while (curIdx == foundIdx);
             if (AreMatched(organism, Organisms[foundIdx]))
             {
-               return Organisms[i];
+               return Organisms[foundIdx];
             }
          }
          return null;
@@ -563,6 +571,11 @@ namespace KamGenetics2020.Model
 
       public double OrganismStealsFood(Organism organism, int killProbability)
       {
+         if (Population < 2)
+         {
+            // Nobody to steal from
+            return 0;
+         }
          Organism victim = null;
          int searchCount = MaxPopulationToSupport / 10;
          var curIdx = Organisms.IndexOf(organism);
@@ -577,7 +590,7 @@ namespace KamGenetics2020.Model
             while (curIdx == foundIdx);
             if (CanSteal(organism, Organisms[foundIdx], killProbability, out killsVictim))
             {
-               victim = Organisms[i];
+               victim = Organisms[foundIdx];
                break;
             }
          }
