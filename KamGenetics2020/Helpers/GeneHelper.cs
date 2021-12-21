@@ -8,7 +8,7 @@ namespace KamGenetics2020.Helpers
    public static class GeneHelper
    {
       // Constants
-      private const int MinLibido = 1;
+      private const int MinLibido = 0;
       private const int MaxLibido = 10;
 
 
@@ -61,7 +61,6 @@ namespace KamGenetics2020.Helpers
 
       public static Gene CreateLibidoGene(int value = (MaxLibido - MinLibido) / 2)
       {
-         // ReSharper disable once UseObjectOrCollectionInitializer
          var gene = new Gene
          {
             GeneDescription = GeneEnum.Libido.ToString(),

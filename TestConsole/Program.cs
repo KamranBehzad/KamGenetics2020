@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Configuration;
-using System.Runtime.CompilerServices;
 using GeneticsDataAccess;
 using KamGenetics2020.Model;
 using KBLib.Classes;
@@ -43,8 +42,8 @@ namespace TestConsole
       static void Main()
       {
          // Init console
-         ConsoleHelper.WhiteBackground();
-         ConsoleHelper.Black();
+         ConsoleHelper.BlackBackground();
+         ConsoleHelper.Cyan();
          ConsoleHelper.BeginProgram();
 
          // Init random seed
@@ -95,21 +94,18 @@ namespace TestConsole
          var estimatedMilliseconds = elapsed.TotalMilliseconds / World.TimeIdx * (SimDuration - World.TimeIdx);
          var estimatedFinish = XDateTime.MilliSecParseToSec(estimatedMilliseconds);
 
-         ConsoleHelper.Black();
+         ConsoleHelper.Contrast();
          Console.Write($"{Simulator.TimeIndex}:");
          ConsoleHelper.DarkRed();
          Console.Write($" Population: {World.Population}".PadRight(20));
          ConsoleHelper.DarkGreen();
          Console.Write($" Resources: {World.ResourceLevel:n0}".PadRight(22));
-         ConsoleHelper.Black();
-         Console.Write($" Dying: {World.LastDyingCount}".PadRight(16));
-         ConsoleHelper.White();
-         Console.Write($" Born: {World.LastBabyCount}".PadRight(16));
+         ConsoleHelper.Contrast();
+         Console.Write($" Died/Born: {World.LastDyingCount}/{World.LastBabyCount}".PadRight(25));
          ConsoleHelper.Red();
-         Console.WriteLine($" ETA: {estimatedFinish}");
+         Console.WriteLine($" ETA: {estimatedFinish} s");
 
-
-         ConsoleHelper.Black();
+         ConsoleHelper.Contrast();
       }
 
       private static void DoInitialPersist()

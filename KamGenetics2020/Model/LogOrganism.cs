@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
-using System.Xml;
 
 namespace KamGenetics2020.Model
 {
-   public class LogOrganism
+    //   [Serializable]
+    public class LogOrganism
    {
       public LogOrganism()
       { }

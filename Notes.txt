@@ -1,0 +1,3 @@
+211220
+After a drought, population goes to single digits (from 10,000s). Something not right withj the distribution of food. More organisms should be finding food and surviving when regeneration is enough for 1000.
+ Check ssk food logic.

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace KamGenetics2020.Model
 {
-   [Serializable]
+//   [Serializable]
  public  class OrganismStat
    {
       [Key]

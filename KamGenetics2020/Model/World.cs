@@ -16,10 +16,11 @@ namespace KamGenetics2020.Model
       private const int DefaultTimeIncrement = 1;
 
       // Population constants
-      private const int GeneralMultiplier = 10;
-      private const int InitialOrganismCount = 100 * GeneralMultiplier;
-      private const int MaxPopulationToSupport = 100 * GeneralMultiplier;
-      private const int MinPopulationToSupport = 100;
+      private const int InitialOrganismCount = 100;
+
+      private const int MaxPopulationToSupport = 5000;
+      private const int MinPopulationToSupport = 1000;
+
       private const int ExpectedOrganismLifetimeConsumption = 80;
 
       // Resource constants
@@ -85,7 +86,8 @@ namespace KamGenetics2020.Model
       private List<Organism> _organisms;
       private List<Group> _groups;
 
-      private List<Organism> Organisms
+      [NotMapped]
+        private List<Organism> Organisms
       {
          get
          {
@@ -98,7 +100,8 @@ namespace KamGenetics2020.Model
          }
       }
 
-      private List<Group> Groups
+        [NotMapped]
+        private List<Group> Groups
       {
          get
          {
