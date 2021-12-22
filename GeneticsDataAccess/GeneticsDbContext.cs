@@ -22,9 +22,9 @@ namespace GeneticsDataAccess
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Ignore creating data tables for any entities here
-            modelBuilder.Ignore<Organism>();
-            modelBuilder.Ignore<OrganismStat>();
-            modelBuilder.Ignore<LogOrganism>();
+            //modelBuilder.Ignore<Organism>();
+            //modelBuilder.Ignore<OrganismStat>();
+            //modelBuilder.Ignore<LogOrganism>();
             
             base.OnModelCreating(modelBuilder);
             MapEntities(modelBuilder);

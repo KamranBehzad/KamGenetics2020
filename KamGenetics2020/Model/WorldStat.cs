@@ -11,7 +11,7 @@ namespace KamGenetics2020.Model
         public int TimeIdx { get; set; }
         public int Population { get; set; }
         public int Born { get; set; }
-        public int Died { get; set; }
+        public int Terminated { get; set; }
         public double PeriodStartResourceLevel { get; set; }
         public double PeriodEndResourceLevel { get; set; }
         public double PeriodConsumption { get; set; }

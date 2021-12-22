@@ -14,7 +14,10 @@ namespace KamGenetics2020.Model
     [DebuggerDisplay("Id:{Id} Group:{GroupId}")]
     public class Organism
     {
-        protected LogLevel OrgLogLevel = LogLevel.None;
+        // Organism ID
+        private static long NextOrgId = 1;
+
+        protected LogLevel MasterLogLevel = LogLevel.All;
         // Procreation constant
         private const bool SelfAdjustingLibido = true;  // When true libido adjusts down when resources are low.
 
@@ -22,12 +25,13 @@ namespace KamGenetics2020.Model
         private const int MaxAge = 80;
         private const int MaturityStartSexual = 15;
         private const int MaturityFinishSexual = 65;
-        private const double DeathByAccidentPercentage = 0.02;
 
-        // Resource Manipulation constants
-        private const double DefaultConsumptionRatePerPeriod = 1;
-        private const double DefaultStorageCapacity = 5;
-        private const double InitialStorageLevel = 1;
+        private const int MaturityStartMigration = 12;
+
+        // Termination constants
+        private const double TerminationByAccidentPercentage = 0.02;
+        private const double TerminationByShortageMigrationPercentage = 10;
+        private const double TerminationByVoluntaryMigrationPercentage = 0.1;
 
         // Log constants
         private const string LogPriorityIsBorn = "00010";
@@ -40,7 +44,7 @@ namespace KamGenetics2020.Model
         private const string LogPriorityResourceExchange = "00500";
         private const string LogPriorityTraining = "00600";
         private const string LogPriorityLostStorage = "00700";
-        private const string LogPriorityDeath = "09999";
+        private const string LogPriorityTermination = "09999";
 
         // Stealing constants
         private const int MaturityStartStealing = 10;
@@ -50,10 +54,10 @@ namespace KamGenetics2020.Model
         private const int StealHiProbability = 90;
         private const int StealFullProbability = 100;
 
-        private const int KillNoProbability = 0;
-        private const int KillLowProbability = 1;
-        private const int KillMedProbability = 2;
-        private const int KillHiProbability = 5;
+        private const double KillNoProbability = 0;
+        private const double KillLowProbability = 0.001;
+        private const double KillMedProbability = 0.005;
+        private const double KillHiProbability = 0.02;
 
         // Military training constants
         private const int MaturityStartCombat = 15;
@@ -73,6 +77,7 @@ namespace KamGenetics2020.Model
         public Organism(World world, Organism parent) : this()
         {
             World = world;
+            IdAux = GetNextOrganismId();
             Parent = parent;
             ParentId = Parent?.Id;
 
@@ -81,8 +86,8 @@ namespace KamGenetics2020.Model
 
             Dob = TimeIdx;
 
-            ConsumptionRatePerPeriod = DefaultConsumptionRatePerPeriod;
-            StorageLevel = InitialStorageLevel;
+            ConsumptionPerPeriod = World.DefaultConsumptionPerPeriod;
+            StorageLevel = World.InitialStorageLevel;
             InitGenes();
         }
 
@@ -91,11 +96,12 @@ namespace KamGenetics2020.Model
             var baby = new Organism
             {
                 World = world,
+                IdAux = GetNextOrganismId(),
                 Parent = parent,
                 ParentId = parent?.Id,
                 Dob = TimeIdx,
-                ConsumptionRatePerPeriod = DefaultConsumptionRatePerPeriod,
-                StorageLevel = InitialStorageLevel,
+                ConsumptionPerPeriod = World.DefaultConsumptionPerPeriod,
+                StorageLevel = World.InitialStorageLevel,
                 Genes = genes
             };
             // Give half resources to baby
@@ -109,8 +115,8 @@ namespace KamGenetics2020.Model
         {
             organismReceiver.StorageLevel += exchangeQty;
             StorageLevel -= exchangeQty;
-            AddLogEntry(LogPriorityResourceExchange, "Gave resources", StorageLevel, Starvation, exchangeQty, LogLevel.Important);
-            organismReceiver.AddLogEntry(LogPriorityResourceExchange, "Received resources", organismReceiver.StorageLevel, organismReceiver.Starvation, exchangeQty, LogLevel.Important);
+            AddLogEntry(LogPriorityResourceExchange, "Gave resources", exchangeQty, LogLevel.Important);
+            organismReceiver.AddLogEntry(LogPriorityResourceExchange, "Received resources", exchangeQty, LogLevel.Important);
         }
 
         private void InitGenes()
@@ -124,11 +130,12 @@ namespace KamGenetics2020.Model
         }
 
         [Key]
-        public int Id { get; set; }
+        public long Id { get; set; }
+        public long IdAux { get; set; }
 
         public int TimeIdx => World.TimeIdx;
 
-        public int? ParentId { get; private set; }
+        public long? ParentId { get; private set; }
 
         public Organism Parent { get; private set; }
 
@@ -150,11 +157,12 @@ namespace KamGenetics2020.Model
         }
 
         /// <summary>
-        /// Resources can be obtained by seeking the world (hunting & gathering and cultivating) or bu stealing.
+        /// Resources can be obtained by seeking the world (hunting & gathering and cultivating) or by stealing.
         /// How it's done and in what order is governed by genes.
         /// </summary>
         private void ObtainResources()
         {
+            double stolenResources = 0;
             switch ((EconomyGene)GetGeneValueByType(GeneEnum.Economy))
             {
                 case EconomyGene.Worker:
@@ -191,21 +199,21 @@ namespace KamGenetics2020.Model
                     switch ((MilitaryGene)GetGeneValueByType(GeneEnum.Military))
                     {
                         default:
-                            StealResources(StealFullProbability, true, KillNoProbability);
+                            stolenResources = StealResources(StealFullProbability, true, KillNoProbability);
                             break;
                         case MilitaryGene.Passive:
-                            StealResources(StealFullProbability, true, KillLowProbability);
+                            stolenResources = StealResources(StealFullProbability, true, KillLowProbability);
                             break;
                         case MilitaryGene.Proactive:
-                            StealResources(StealFullProbability, true, KillMedProbability);
+                            stolenResources = StealResources(StealFullProbability, true, KillMedProbability);
                             break;
                         case MilitaryGene.Offender:
-                            StealResources(StealFullProbability, true, KillHiProbability);
+                            stolenResources = StealResources(StealFullProbability, true, KillHiProbability);
                             break;
                     }
 
                     // Seek if steal yield was not enough
-                    if (StorageLevel >= 1 || Starvation.Equals(0))
+                    if ((StorageLevel >= 1 || Starvation.Equals(0)) && !stolenResources.Equals(0))
                     {
                         return;
                     }
@@ -243,49 +251,54 @@ namespace KamGenetics2020.Model
             }
         }
 
-        private void StealResources(int stealProbability, bool beforeFoodSeek, int killProbability = 0)
+        private double StealResources(int stealProbability, bool beforeFoodSeek, double killProbability = 0)
         {
             var random = 100 * RandomHelper.StandardGeneratorInstance.NextDouble();
             if (random > stealProbability)
             {
-                return;
+                return 0;
             }
             double resourceStolen = World.OrganismStealsFood(this, killProbability);
             if (resourceStolen.Equals(0))
             {
-                return;
+                return 0;
             }
             IncreaseResources(resourceStolen);
+            ThisPeriodStats.FoodStolen = resourceStolen;
+
             if (beforeFoodSeek)
             {
-                AddLogEntry(LogPriorityStoleResourceBefore, "Stole resources", StorageLevel, Starvation, resourceStolen, LogLevel.Important);
+                AddLogEntry(LogPriorityStoleResourceBefore, "Stole resources", resourceStolen, LogLevel.Important);
             }
             else
             {
-                AddLogEntry(LogPriorityStoleResourceAfter, "Stole resources", StorageLevel, Starvation, resourceStolen, LogLevel.Important);
+                AddLogEntry(LogPriorityStoleResourceAfter, "Stole resources", resourceStolen, LogLevel.Important);
             }
+            return resourceStolen;
         }
 
         private void SeekResources()
         {
             // +consumptionRatePerPeriod is because when organism is at full storage capacity, it can still find and consume as per its consumption rate
-            var resourceFound = World.OrganismSeeksFood(ConsumptionRatePerPeriod, AvailableStorageCapacity + ConsumptionRatePerPeriod);
+            var resourceFound = World.OrganismSeeksFood(ConsumptionPerPeriod, AvailableStorageCapacity + ConsumptionPerPeriod);
             IncreaseResources(resourceFound);
-            AddLogEntry(LogPriorityFoundResource, "Found resources", StorageLevel, Starvation, resourceFound, LogLevel.EveryInterval);
+            ThisPeriodStats.PeriodCultivation = resourceFound;
+            AddLogEntry(LogPriorityFoundResource, "Found resources", resourceFound, LogLevel.EveryInterval);
         }
 
         private void IncreaseResources(double resourceObtained)
         {
             // First fills personal storage then contributes the rest to the group if any
-            var maxPersonalShare = StorageCapacity + ConsumptionRatePerPeriod - StorageLevel;
+            var maxPersonalShare = StorageCapacity + ConsumptionPerPeriod - StorageLevel;
             var personalShare = Math.Min(maxPersonalShare, resourceObtained);
-            var groupShare = resourceObtained - personalShare;
 
             StorageLevel += personalShare;
-            StorageLevel = Math.Min(StorageLevel, StorageCapacity + ConsumptionRatePerPeriod);
+            StorageLevel = Math.Min(StorageLevel, StorageCapacity + ConsumptionPerPeriod);
             if (IsInGroup)
             {
+                var groupShare = resourceObtained - personalShare;
                 Group.IncreaseResources(groupShare);
+                ThisPeriodStats.FoodToGroup = groupShare;
             }
         }
 
@@ -296,25 +309,27 @@ namespace KamGenetics2020.Model
 
         private void ConsumeResources()
         {
-            double consumption = Math.Min(AvailableResources, ConsumptionRatePerPeriod);
+            double consumption = Math.Min(AvailableResources, ConsumptionPerPeriod);
             World.RecordOrganismConsumptionInCurrentPeriod(consumption);
             DecreaseResources(consumption);
+            ThisPeriodStats.PeriodConsumption = consumption;
+            ThisPeriodStats.PeriodEndResourceLevel = StorageLevel;
 
             // todo develop consumption & starvation model
-            if (consumption < ConsumptionRatePerPeriod)
+            if (consumption < ConsumptionPerPeriod)
             {
 
-                Starvation += (ConsumptionRatePerPeriod - consumption);
-                if (Starvation > ConsumptionRatePerPeriod)
+                Starvation += (ConsumptionPerPeriod - consumption);
+                if (Starvation > ConsumptionPerPeriod)
                 {
-                    Die("Starvation");
+                    Terminate("Starvation");
                 }
             }
             else
             {
                 Starvation = 0;
             }
-            AddLogEntry(LogPriorityConsumeResource, "Consumed resources", StorageLevel, Starvation, consumption, LogLevel.EveryInterval);
+            AddLogEntry(LogPriorityConsumeResource, "Consumed resources", consumption, LogLevel.EveryInterval);
         }
 
         /// <summary>
@@ -329,13 +344,14 @@ namespace KamGenetics2020.Model
             else if (IsInGroup)
             {
                 Group.DecreaseResources(consumption);
+                ThisPeriodStats.FoodFromGroup = consumption;
             }
         }
 
         public void DecreaseStorageLevel(double amount, string reason)
         {
             StorageLevel = Math.Max(0, StorageLevel - amount);
-            AddLogEntry(LogPriorityLostStorage, $"Lost storage. Reason: {reason}", StorageLevel, Starvation, amount, LogLevel.Important);
+            AddLogEntry(LogPriorityLostStorage, $"Lost storage. Reason: {reason}", amount, LogLevel.Important);
         }
 
 
@@ -358,15 +374,15 @@ namespace KamGenetics2020.Model
                 PeriodStartResourceLevel = StorageLevel,
             };
 
-            // Might already be dead because it was killed this period
-            if (IsDead)
+            // Might already be terminated because it was killed this period
+            if (IsTerminated)
             {
                 return;
             }
-            var (result, reason) = WillDie();
+            var (result, reason) = WillTerminate();
             if (result)
             {
-                Die(reason);
+                Terminate(reason);
                 return;
             }
 
@@ -375,6 +391,12 @@ namespace KamGenetics2020.Model
             ConsumeResources();
             ProcreateAsexual();
             MilitaryTraining();
+            RecordPeriodStats();
+        }
+
+        private void RecordPeriodStats()
+        {
+            ThisPeriodStats.TimeIdx = TimeIdx;
             PeriodStats.Add(ThisPeriodStats);
         }
 
@@ -410,7 +432,7 @@ namespace KamGenetics2020.Model
             // Non militants do not increase power so no need to log for them
             if (MilitaryPower > 0)
             {
-                AddLogEntry(LogPriorityTraining, "Power increase", StorageLevel, Starvation, MilitaryPower, LogLevel.EveryInterval);
+                AddLogEntry(LogPriorityTraining, "Power increase", MilitaryPower, LogLevel.EveryInterval);
             }
         }
 
@@ -444,21 +466,21 @@ namespace KamGenetics2020.Model
                 bool formedGroup = FormGroup(similarOrganism);
                 if (formedGroup)
                 {
-                    AddLogEntry(LogPriorityFormJoinGroup, "Formed new Group", StorageLevel, Starvation, null, LogLevel.MostImportant);
-                    similarOrganism.AddLogEntry(LogPriorityFormJoinGroup, "Formed new Group", similarOrganism.StorageLevel, similarOrganism.Starvation, null, LogLevel.MostImportant);
+                    AddLogEntry(LogPriorityFormJoinGroup, "Formed new Group", null, LogLevel.MostImportant);
+                    similarOrganism.AddLogEntry(LogPriorityFormJoinGroup, "Formed new Group", null, LogLevel.MostImportant);
                 }
             }
             else if (!IsInGroup && similarOrganism.IsInGroup)
             {
                 // we join the other group
                 similarOrganism.Group.Join(this);
-                AddLogEntry(LogPriorityFormJoinGroup, "Joined Group", StorageLevel, Starvation, Group.Id, LogLevel.MostImportant);
+                AddLogEntry(LogPriorityFormJoinGroup, "Joined Group", Group.Id, LogLevel.MostImportant);
             }
             else if (IsInGroup && !similarOrganism.IsInGroup)
             {
                 // other organism joins us
                 Group.Join(similarOrganism);
-                similarOrganism.AddLogEntry(LogPriorityFormJoinGroup, "Invited to Group", similarOrganism.StorageLevel, similarOrganism.Starvation, Group.Id, LogLevel.MostImportant);
+                similarOrganism.AddLogEntry(LogPriorityFormJoinGroup, "Invited to Group", Group.Id, LogLevel.MostImportant);
             }
         }
 
@@ -488,9 +510,9 @@ namespace KamGenetics2020.Model
                 babyGene.Mutate();
                 babyGenes.Add(babyGene);
             }
-            AddLogEntry(LogPriorityGaveBirth, "Gave birth", StorageLevel, Starvation, null, LogLevel.Important);
+            AddLogEntry(LogPriorityGaveBirth, "Gave birth", null, LogLevel.Important);
             var baby = NewBaby(World, this, babyGenes);
-            baby.AddLogEntry(LogPriorityIsBorn, "Is born", StorageLevel, Starvation, null, LogLevel.EveryInterval);
+            baby.AddLogEntry(LogPriorityIsBorn, "Is born", null, LogLevel.EveryInterval);
             return baby;
         }
 
@@ -525,7 +547,7 @@ namespace KamGenetics2020.Model
             if (isSelfAdjusting)
             {
                 const double resourceDependencyCoef = 0.70;
-                double resourceAvailabilityModifier = 1 - (DefaultStorageCapacity / 2 - AvailableResources) * resourceDependencyCoef;
+                double resourceAvailabilityModifier = 1 - (World.DefaultStorageCapacity / 2 - AvailableResources) * resourceDependencyCoef;
                 double resourceAvailabilityModifierBounded = Math.Min(Math.Max(resourceAvailabilityModifier, 0), 1);
                 double resourceModifiedLibido = libido * resourceAvailabilityModifierBounded;
                 result = Age >= MaturityStartSexual
@@ -543,46 +565,78 @@ namespace KamGenetics2020.Model
 
         public World World { get; set; }
 
-        private (bool result, string reason) WillDie()
+        private (bool result, string reason) WillTerminate()
         {
-            var deathByAge = Age > MaxAge + RandomHelper.StandardGeneratorInstance.Next(20) - 10;
-            if (deathByAge)
+            var terminationByAge = Age > MaxAge + RandomHelper.StandardGeneratorInstance.Next(20) - 10;
+            if (terminationByAge)
             {
-                return (true, "Old Age");
+                return (true, "Age");
             }
 
-            var deathByAccident = RandomHelper.StandardGeneratorInstance.NextDouble() * 100 < DeathByAccidentPercentage;
-            if (deathByAccident)
+            var terminationByAccident = RandomHelper.StandardGeneratorInstance.NextDouble() * 100 < TerminationByAccidentPercentage;
+            if (terminationByAccident)
             {
                 return (true, "Accident");
+            }
+
+            if (FacesShortage())
+            {
+                var terminationByMigrationShortage = RandomHelper.StandardGeneratorInstance.NextDouble() * 100 < TerminationByShortageMigrationPercentage * ShortagesExperienced &&
+                    Age >= MaturityStartMigration;
+                if (terminationByMigrationShortage)
+                {
+                    return (true, "MigrationShortage");
+                }
+            }
+
+            var terminationByMigrationVolunteer = RandomHelper.StandardGeneratorInstance.NextDouble() * 100 < TerminationByVoluntaryMigrationPercentage &&
+                    Age >= MaturityStartMigration;
+            if (terminationByMigrationVolunteer)
+            {
+                return (true, "MigrationVolunteer");
             }
             return (false, string.Empty);
         }
 
+        /// <summary>
+        /// Shortage is sensed if available resources are less than N periods worth of consumption.
+        /// </summary>
+        /// <returns></returns>
+        private bool FacesShortage()
+        {
+            int safetyPeriodCount = 4;
+            bool result = AvailableResources < World.DefaultConsumptionPerPeriod * safetyPeriodCount;
+            if (result)
+            {
+                ShortagesExperienced++;
+            }
+            return result;
+        }
+
         public int Age => TimeIdx - Dob;
         public int Dob { get; set; }
-        public int Dod { get; set; }
+        public int Dot { get; set; }
         public int FinalAge { get; set; }
 
-        public void Die(string reason)
+        public void Terminate(string reason)
         {
-            AddLogEntry(LogPriorityDeath, $"Dying: {reason}, Age:", StorageLevel, Starvation, Age, LogLevel.Important);
-            IsDead = true;
-            DeathReason = reason;
-            Dod = TimeIdx;
+            AddLogEntry(LogPriorityTermination, $"Terminating: {reason}, Age:", Age, LogLevel.Important);
+            IsTerminated = true;
+            TerminationReason = reason;
+            Dot = TimeIdx;
             FinalAge = Age;
             // Remove from group if any
             Group?.Remove(this);
         }
 
-        public string DeathReason { get; set; }
+        public string TerminationReason { get; set; }
         public DateTime Modified { get; set; }
 
         [NotMapped]
-        public bool IsDead { get; set; }
+        public bool IsTerminated { get; set; }
 
         [NotMapped]
-        public double ConsumptionRatePerPeriod { get; set; }
+        public double ConsumptionPerPeriod { get; set; }
 
         public int? GroupId { get; set; }
 
@@ -590,7 +644,7 @@ namespace KamGenetics2020.Model
 
         public Group Group { get; set; }
 
-        public double StorageCapacity => DefaultStorageCapacity;
+        public double StorageCapacity => World.DefaultStorageCapacity;
 
         [NotMapped]
         public double StorageLevel { get; set; }
@@ -610,28 +664,28 @@ namespace KamGenetics2020.Model
             return Genes.FirstOrDefault(g => g.GeneType == geneType)?.CurrentValue ?? 0;
         }
 
-        private List<LogOrganism> _logBook;
+        private List<OrganismLog> _logBook;
 
         //[NotMapped]
-        public List<LogOrganism> LogBook
+        public List<OrganismLog> LogBook
         {
             get
             {
                 if (_logBook == null)
                 {
-                    _logBook = new List<LogOrganism>();
+                    _logBook = new List<OrganismLog>();
                 }
 
                 return _logBook;
             }
         }
 
-        public void AddLogEntry(string priority, string text, double storage, double starvation, double? qty = null, LogLevel level = LogLevel.All)
+        public void AddLogEntry(string priority, string text, double? qty = null, LogLevel level = LogLevel.All)
         {
-            var logApproval = (int)level & (int)OrgLogLevel;
+            var logApproval = (int)level & (int)MasterLogLevel;
             if (logApproval > 0)
             {
-                LogBook.Add(new LogOrganism(priority, text, storage, starvation, qty, TimeIdx));
+                LogBook.Add(new OrganismLog(this, priority, text, qty, TimeIdx));
             }
         }
 
@@ -655,5 +709,11 @@ namespace KamGenetics2020.Model
             }
         }
 
+        public int ShortagesExperienced { get; private set; }
+
+        private long GetNextOrganismId()
+        {
+            return NextOrgId++;
+        }
     }
 }

@@ -1,3 +1,15 @@
 211220
-After a drought, population goes to single digits (from 10,000s). Something not right withj the distribution of food. More organisms should be finding food and surviving when regeneration is enough for 1000.
- Check ssk food logic.
+After a drought, population goes to single digits (from 10,000s). Something not right with the distribution of food. More organisms should be finding food and surviving when regeneration is enough for 1000.
+ Check the food logic.
+
+ 211221
+ - Kill % is too high. About 35%.
+
+- Introducing immigration
+Immi reason:
+. not enough food (higher prob with consecutive shortages)
+. too much violence
+. voluntary
+
+
+- ensure organism logs work
