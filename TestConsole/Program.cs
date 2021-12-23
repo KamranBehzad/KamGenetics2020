@@ -13,7 +13,7 @@ namespace TestConsole
         /// *************************************************************************************************************
 
         private static bool _dbRun = true; // if this is false then it's a debug run only. no need for db data storage
-        const int SimDuration = 200;
+        const int SimDuration = 300;
 
         /// *************************************************************************************************************
 

@@ -18,8 +18,8 @@ namespace KamGenetics2020.Model
         // Population constants
         private const int InitialOrganismCount = 100;
 
-        private const int MaxPopulationToSupport = 5000;
-        private const int MinPopulationToSupport = 1000;
+        private const int MinPopulationToSupport = 500;
+        private const int MaxPopulationToSupport = 2000;
 
         // Resource constants
         private const double DefaultMaxResourceLevel = double.MaxValue;

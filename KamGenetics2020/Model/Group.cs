@@ -1,4 +1,5 @@
 ﻿using KamGeneticsLib.Model;
+using KBLib.Helpers;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -12,6 +13,9 @@ namespace KamGenetics2020.Model
     [DebuggerDisplay("Id:{Id} Pop:{Population}")]
     public class Group
     {
+        private static int DefaultThiefGroupPopulationLimit = 10;
+        private static int DefaultWorkerGroupPopulationLimit = 500;
+
         private LogLevel GroupLogLevel = LogLevel.All;
 
         // Log constants
@@ -25,8 +29,8 @@ namespace KamGenetics2020.Model
         public Group(World world, Organism organism1, Organism organism2) : this()
         {
             World = world;
-            Join(organism1);
-            Join(organism2);
+            Add(organism1);
+            Add(organism2);
         }
         public World World { get; set; }
 
@@ -60,7 +64,7 @@ namespace KamGenetics2020.Model
         public double OrganismResourceShare => Population > 0 ? StorageLevel / Population : 0;
         public double AvailableStorageCapacity => StorageCapacity - StorageLevel;
 
-        public Group Join(Organism organism)
+        public Group Add(Organism organism)
         {
             Organisms.Add(organism);
             organism.Group = this;
@@ -70,6 +74,23 @@ namespace KamGenetics2020.Model
             EconomyScore = GetEconomyScore();
             MilitaryScore = GetMilitaryScore();
             return this;
+        }
+
+        public bool Join(Organism organism)
+        {
+            var canJoin = CanJoin();
+            if (!canJoin)
+            {
+                return false;
+            }
+            Organisms.Add(organism);
+            organism.Group = this;
+            organism.GroupId = Id;
+            StorageCapacity += organism.StorageCapacity;
+            StorageLevel += organism.StorageLevel;
+            EconomyScore = GetEconomyScore();
+            MilitaryScore = GetMilitaryScore();
+            return true;
         }
 
         public Group Remove(Organism organism)
@@ -222,6 +243,26 @@ namespace KamGenetics2020.Model
 
                 return _periodStats;
             }
+        }
+
+        /// <summary>
+        /// Absolute maximum acceptaable population is 120% of the default limit
+        /// At 80% and below we accept @ 100% rate.
+        /// At 100% we accept @ 50% rate.
+        /// At 120% we accept @ 0% rate.
+        /// </summary>
+        /// <returns></returns>
+        public double GetJoinProbability()
+        {
+            var PopulationLimit = (EconomyScore < 2.5) ? DefaultWorkerGroupPopulationLimit : DefaultThiefGroupPopulationLimit;
+            double result = Math.Max(100, 1.2 - (Population / PopulationLimit) * 2.5);
+            return result;
+        }
+
+        public bool CanJoin()
+        {
+            var rand = RandomHelper.StandardGeneratorInstance.NextDouble();
+            return rand <= GetJoinProbability();
         }
     }
 }

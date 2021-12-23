@@ -107,7 +107,7 @@ namespace KamGenetics2020.Model
             // Give half resources to baby
             ShareResourcesWith(baby, StorageLevel / 2);
             // Baby automatically becomes part of parent's group
-            parent?.Group?.Join(baby);
+            parent?.Group?.Add(baby);
             return baby;
         }
 
@@ -386,12 +386,25 @@ namespace KamGenetics2020.Model
                 return;
             }
 
+            LeaveGroup();
             JoinGroup();
             ObtainResources();
             ConsumeResources();
             ProcreateAsexual();
             MilitaryTraining();
             RecordPeriodStats();
+        }
+
+        /// <summary>
+        /// Individual leaves parental group on reaching maturity
+        /// </summary>
+        private void LeaveGroup()
+        {
+            if (IsInGroup && Age == MaturityStartSexual && Group.Population > 2)
+            {
+                Group.Remove(this);
+                Group = null;
+            }
         }
 
         private void RecordPeriodStats()
@@ -445,7 +458,9 @@ namespace KamGenetics2020.Model
         private void JoinGroup()
         {
             // Ignore if not inclined to join groups
-            if (GetGeneValueByType(GeneEnum.Cooperation) == (int)CooperationGene.Solo)
+            // or not mature yet
+            if (GetGeneValueByType(GeneEnum.Cooperation) == (int)CooperationGene.Solo 
+                || Age <= MaturityStartSexual)
             {
                 return;
             }
@@ -473,14 +488,28 @@ namespace KamGenetics2020.Model
             else if (!IsInGroup && similarOrganism.IsInGroup)
             {
                 // we join the other group
-                similarOrganism.Group.Join(this);
-                AddLogEntry(LogPriorityFormJoinGroup, "Joined Group", Group.Id, LogLevel.MostImportant);
+                var joined = similarOrganism.Group.Join(this);
+                if (joined)
+                {
+                    AddLogEntry(LogPriorityFormJoinGroup, "Joined Group", Group.Id, LogLevel.MostImportant);
+                }
+                else
+                {
+                    AddLogEntry(LogPriorityFormJoinGroup, "Group join failed", Group.Id, LogLevel.MostImportant);
+                }
             }
             else if (IsInGroup && !similarOrganism.IsInGroup)
             {
                 // other organism joins us
-                Group.Join(similarOrganism);
-                similarOrganism.AddLogEntry(LogPriorityFormJoinGroup, "Invited to Group", Group.Id, LogLevel.MostImportant);
+                var joined = Group.Join(similarOrganism);
+                if (joined)
+                {
+                    similarOrganism.AddLogEntry(LogPriorityFormJoinGroup, "Invited to Group", Group.Id, LogLevel.MostImportant);
+                }
+                else
+                {
+                    similarOrganism.AddLogEntry(LogPriorityFormJoinGroup, "Group invite failed", Group.Id, LogLevel.MostImportant);
+                }
             }
         }
 
