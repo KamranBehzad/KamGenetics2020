@@ -46,6 +46,12 @@ namespace KamGenetics2020.Model
         private const string LogPriorityLostStorage = "00700";
         private const string LogPriorityTermination = "09999";
 
+        internal void AddToGroup(Group group)
+        {
+            Groups.Add(group);
+            IsInGroup = true;
+        }
+
         // Stealing constants
         private const int MaturityStartStealing = 10;
 
@@ -80,9 +86,6 @@ namespace KamGenetics2020.Model
             IdAux = GetNextOrganismId();
             Parent = parent;
             ParentId = Parent?.Id;
-
-            Group = null;
-            GroupId = null;
 
             Dob = TimeIdx;
 
@@ -354,8 +357,8 @@ namespace KamGenetics2020.Model
             AddLogEntry(LogPriorityLostStorage, $"Lost storage. Reason: {reason}", amount, LogLevel.Important);
         }
 
-
-        public bool IsInGroup => Group != null;
+        [NotMapped]
+        public bool IsInGroup { get; set; }
 
         private double AvailableResources => IsInGroup ? Group.OrganismResourceShare : StorageLevel;
 
@@ -402,8 +405,8 @@ namespace KamGenetics2020.Model
         {
             if (IsInGroup && Age == MaturityStartSexual && Group.Population > 2)
             {
-                Group.Remove(this);
-                Group = null;
+                Group?.Remove(this);
+                IsInGroup = false;
             }
         }
 
@@ -667,11 +670,23 @@ namespace KamGenetics2020.Model
         [NotMapped]
         public double ConsumptionPerPeriod { get; set; }
 
-        public int? GroupId { get; set; }
-
         [NotMapped]
+        public int? GroupId => Group?.Id;
 
-        public Group Group { get; set; }
+        List<Group> _groups;
+        public List<Group> Groups
+        {
+            get
+            {
+                if (_groups == null)
+                {
+                    _groups = new List<Group>();
+                }
+                return _groups;
+            }
+        }
+
+        public Group Group => Groups.Count == 0 ? null : Groups[Groups.Count - 1];
 
         public double StorageCapacity => World.DefaultStorageCapacity;
 

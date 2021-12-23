@@ -13,7 +13,6 @@ namespace TestConsole
         /// *************************************************************************************************************
 
         private static bool _dbRun = true; // if this is false then it's a debug run only. no need for db data storage
-        const int SimDuration = 300;
 
         /// *************************************************************************************************************
 
@@ -28,7 +27,7 @@ namespace TestConsole
             {
                 if (_simulator == null)
                 {
-                    _simulator = new Simulator(SimDuration);
+                    _simulator = new Simulator(World.SimDuration);
                     _simulator.OnSimulate += World.SimulateSinglePeriod;
                     _simulator.OnSimulate += Report;
                     _simulator.OnSimulate += PersistWorldToDb;
@@ -93,7 +92,7 @@ namespace TestConsole
         private static void Report()
         {
             var elapsed = DateTime.Now - _startTime;
-            var estimatedMilliseconds = elapsed.TotalMilliseconds / World.TimeIdx * (SimDuration - World.TimeIdx);
+            var estimatedMilliseconds = elapsed.TotalMilliseconds / World.TimeIdx * (World.SimDuration - World.TimeIdx);
             var estimatedFinish = XDateTime.MilliSecParseToSec(estimatedMilliseconds);
 
             ConsoleHelper.Contrast();

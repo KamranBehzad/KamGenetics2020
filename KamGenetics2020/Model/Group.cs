@@ -67,8 +67,7 @@ namespace KamGenetics2020.Model
         public Group Add(Organism organism)
         {
             Organisms.Add(organism);
-            organism.Group = this;
-            organism.GroupId = Id;
+            organism.AddToGroup(this);
             StorageCapacity += organism.StorageCapacity;
             StorageLevel += organism.StorageLevel;
             EconomyScore = GetEconomyScore();
@@ -84,8 +83,7 @@ namespace KamGenetics2020.Model
                 return false;
             }
             Organisms.Add(organism);
-            organism.Group = this;
-            organism.GroupId = Id;
+            organism.AddToGroup(this);
             StorageCapacity += organism.StorageCapacity;
             StorageLevel += organism.StorageLevel;
             EconomyScore = GetEconomyScore();
@@ -167,6 +165,7 @@ namespace KamGenetics2020.Model
 
         private List<Organism> _departedOrganisms;
 
+        [NotMapped]
         public List<Organism> DepartedOrganisms
         {
             get

@@ -13,6 +13,7 @@ namespace KamGenetics2020.Model
     [Serializable]
     public class World
     {
+        public const int SimDuration = 300;
         private const int DefaultTimeIncrement = 1;
 
         // Population constants
